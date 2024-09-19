@@ -18,8 +18,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @EnableScheduling
-public class GlaxierBot {
-    private final static Logger logger = LoggerFactory.getLogger(GlaxierBot.class);
+public class LucioBot {
+    private final static Logger logger = LoggerFactory.getLogger(LucioBot.class);
     final RestService restService;
     final PlayerManagerService playerManagerService;
     final MusicCommandUtils musicCommandUtils;
@@ -34,7 +34,7 @@ public class GlaxierBot {
     @Value("${discord.admin.user.id}")
     private String adminUserId;
 
-    public GlaxierBot(RestService restService, PlayerManagerService playerManagerService,
+    public LucioBot(RestService restService, PlayerManagerService playerManagerService,
                       MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService) {
         this.restService = restService;
         this.playerManagerService = playerManagerService;
@@ -45,9 +45,8 @@ public class GlaxierBot {
     @PostConstruct
     public void startDiscordBot() throws InterruptedException {
         JDA jda = JDABuilder.createDefault(discordToken)
-                .addEventListeners(
-                        new CommandManager(restService, playerManagerService, musicCommandUtils, adminUserId))
-                .setActivity(Activity.listening("Type /mhelp")).build();
+                .addEventListeners(new CommandManager(restService, playerManagerService, musicCommandUtils, adminUserId))
+                .setActivity(Activity.listening("Não para, não para, não para não!")).build();
         jda.awaitReady();
         new JdaCommands().addJdaCommands(jda);
         new AdminCommands().addAdminCommands(jda, adminServerId);

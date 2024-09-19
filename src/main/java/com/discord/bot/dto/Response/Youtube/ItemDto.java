@@ -1,5 +1,7 @@
 package com.discord.bot.dto.response.youtube;
 
+import com.discord.bot.dto.response.youtube.IdDto;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

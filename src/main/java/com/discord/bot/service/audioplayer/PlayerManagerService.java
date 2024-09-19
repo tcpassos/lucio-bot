@@ -12,6 +12,8 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -35,6 +37,11 @@ public class PlayerManagerService {
     public PlayerManagerService(MusicRepository musicRepository) {
         this.musicManagers = new HashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
+        
+        // A implementação padrão do YoutubeAudioSourceManager não é mais suportada, estou usando a implementação do LavaLink
+        YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
+        this.audioPlayerManager.registerSourceManager(yt);
+
         AudioSourceManagers.registerRemoteSources(this.audioPlayerManager);
         AudioSourceManagers.registerLocalSource(this.audioPlayerManager);
         this.musicRepository = musicRepository;
@@ -147,6 +154,32 @@ public class PlayerManagerService {
                 }
             });
         }
+    }
+
+    public void playSoundEffect(Guild guild, String resourcePath) {
+        GuildMusicManager guildMusicManager = getMusicManager(guild);
+    
+        audioPlayerManager.loadItem("resource:" + resourcePath, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                guildMusicManager.getSfxPlayer().startTrack(track, false);
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                //
+            }
+
+            @Override
+            public void noMatches() {
+                logger.warn("No match is found.");
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                logger.error("Track load failed.", exception);
+            }
+        });
     }
 
     private void saveTrack(AudioTrack track, String title) {

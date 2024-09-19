@@ -3,6 +3,7 @@ package com.discord.bot.commands;
 import com.discord.bot.commands.admincommands.GuildsCommand;
 import com.discord.bot.commands.admincommands.LogsCommand;
 import com.discord.bot.commands.musiccommands.*;
+import com.discord.bot.commands.othercommands.LucrilhosCommand;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -48,10 +49,10 @@ public class CommandManager extends ListenerAdapter {
 
     private void commandMapper() {
         commandsMap = new ConcurrentHashMap<>();
-        //Admin Commands
+        // Comandos administrativos
         commandsMap.put("guilds", new GuildsCommand(adminUserId));
         commandsMap.put("logs", new LogsCommand(adminUserId));
-        //Music Commands
+        // Comandos de música
         commandsMap.put("play", new PlayCommand(restService, playerManagerService, musicCommandUtils));
         commandsMap.put("skip", new SkipCommand(playerManagerService, musicCommandUtils));
         commandsMap.put("forward", new ForwardCommand(playerManagerService, musicCommandUtils));
@@ -66,5 +67,7 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("remove", new RemoveCommand(playerManagerService, musicCommandUtils));
         commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());
+        // Outros comandos
+        commandsMap.put("lucrilhos", new LucrilhosCommand());
     }
 }

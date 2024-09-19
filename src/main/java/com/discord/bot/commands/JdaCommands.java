@@ -13,7 +13,6 @@ public class JdaCommands {
         String ephemeralString = "Bot reply will only visible to you if set as TRUE, default value is TRUE.";
 
         globalCommands.addCommands(
-                //Music Commands
                 Commands.slash("play", "Play a song on your voice channel.")
                         .addOptions(new OptionData(OptionType.STRING, "query", "Song url or name.")
                                         .setRequired(true),
@@ -109,10 +108,8 @@ public class JdaCommands {
                                 new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString)
                                         .setRequired(false))
                         .setGuildOnly(true),
-                Commands.slash("mhelp", "Help page for the music commands.")
-                        .addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString)
-                                .setRequired(false))
-                        .setGuildOnly(true)
+                Commands.slash("mhelp", "Help page for the music commands.").addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString).setRequired(false)).setGuildOnly(true),
+                Commands.slash("lucrilhos", "Isso é falta de lu-cri-lhos!").setGuildOnly(true)
                 ).queue();
     }
 }

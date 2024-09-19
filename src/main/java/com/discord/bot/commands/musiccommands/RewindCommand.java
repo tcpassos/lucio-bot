@@ -21,7 +21,7 @@ public class RewindCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            var track = playerManagerService.getMusicManager(event.getGuild()).audioPlayer.getPlayingTrack();
+            var track = playerManagerService.getMusicManager(event.getGuild()).musicPlayer.getPlayingTrack();
             var option = event.getOption("sec");
 
             var seconds = option != null ? option.getAsInt() : 0;

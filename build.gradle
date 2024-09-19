@@ -23,6 +23,9 @@ repositories {
     maven {
         url'https://s01.oss.sonatype.org/content/repositories/snapshots'
     }
+    maven{
+        url'https://maven.lavalink.dev/snapshots'
+    }
 
     mavenCentral()
 }
@@ -34,7 +37,8 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'dev.arbjerg:lavaplayer:727959e9f621fc457b3a5adafcfffb55fdeaa538-SNAPSHOT'
-    implementation 'net.dv8tion:JDA:5.0.0-beta.20'
+    implementation("dev.lavalink.youtube:common:03c2427f9057c4b7244538890827d9f028c3c6e6-SNAPSHOT")
+    implementation 'net.dv8tion:JDA:5.1.0'
 }
 
 test {
