@@ -76,7 +76,7 @@ public class RestService {
         Music music = musicRepository.findFirstByTitle(musicDto.getTitle());
 
         if (music != null) {
-            musicDto.setYoutubeUri(music.getYoutubeUri());
+            musicDto.setReference(music.getReference());
             count++;
         } else {
             try {
@@ -99,7 +99,7 @@ public class RestService {
             Music music = musicRepository.findFirstByTitle(musicDto.getTitle());
 
             if (music != null) {
-                musicDto.setYoutubeUri(music.getYoutubeUri());
+                musicDto.setReference(music.getReference());
                 count.incrementAndGet();
             } else {
                 try {
@@ -118,7 +118,7 @@ public class RestService {
     private void setYoutubeVideoUrl(URI youtubeUri, MusicDto musicDto) {
         YoutubeResponse youtubeResponse = restTemplate.getForObject(youtubeUri, YoutubeResponse.class);
         assert youtubeResponse != null;
-        musicDto.setYoutubeUri("https://www.youtube.com/watch?v=" + youtubeResponse.getItems().get(0).getId().getVideoId());
+        musicDto.setReference("https://www.youtube.com/watch?v=" + youtubeResponse.getItems().get(0).getId().getVideoId());
     }
 
     private SpotifyPlaylistResponse getSpotifyPlaylistData(String spotifyUrl) {

@@ -26,13 +26,13 @@ public class ShuffleCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
-            List<AudioTrack> trackList = new ArrayList<>(musicManager.scheduler.queue);
+            GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
+            List<AudioTrack> trackList = new ArrayList<>(musicManager.musicScheduler.queue);
 
             if (trackList.size() > 1) {
                 Collections.shuffle(trackList);
-                musicManager.scheduler.queue.clear();
-                musicManager.scheduler.queueAll(trackList);
+                musicManager.musicScheduler.queue.clear();
+                musicManager.musicScheduler.queueAll(trackList);
 
                 embedBuilder.setDescription("Queue shuffled").setColor(Color.GREEN);
             } else embedBuilder.setDescription("Queue size have to be at least two.").setColor(Color.RED);

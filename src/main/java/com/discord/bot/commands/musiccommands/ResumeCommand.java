@@ -21,7 +21,7 @@ public class ResumeCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            playerManagerService.getMusicManager(event.getGuild()).musicPlayer.setPaused(false);
+            playerManagerService.getAudioManager(event.getGuild()).musicPlayer.setPaused(false);
             embedBuilder.setDescription("Song resumed").setColor(Color.GREEN);
         } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
 

@@ -13,13 +13,17 @@ public class GuildAudioManager {
     public final AudioPlayer musicPlayer;
     public final AudioPlayer sfxPlayer;
     private final AudioSendHandler sendHandler;
-    public TrackScheduler scheduler;
+    public TrackScheduler musicScheduler;
+    public TrackScheduler sfxScheduler;
 
     public GuildAudioManager(AudioPlayerManager manager, Guild guild) {
-        this.sfxPlayer = manager.createPlayer();
         this.musicPlayer = manager.createPlayer();
-        this.scheduler = new TrackScheduler(this.musicPlayer, guild);
-        this.musicPlayer.addListener(this.scheduler);
+        this.musicScheduler = new TrackScheduler(this.musicPlayer, this, guild);
+        this.musicPlayer.addListener(this.musicScheduler);
+
+        this.sfxPlayer = manager.createPlayer();
+        this.sfxScheduler = new TrackScheduler(this.sfxPlayer, this, guild);
+        this.sfxPlayer.addListener(this.sfxScheduler);
 
         this.sendHandler = new AudioMixerSendHandler(this.musicPlayer, this.sfxPlayer);
     }

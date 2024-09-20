@@ -25,15 +25,15 @@ public class SwapCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
-            List<AudioTrack> trackList = new ArrayList<>(musicManager.scheduler.queue);
+            GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
+            List<AudioTrack> trackList = new ArrayList<>(musicManager.musicScheduler.queue);
             var firstOption = event.getOption("songnum1");
             var secondOption = event.getOption("songnum2");
             assert firstOption != null;
             int first = firstOption.getAsInt() - 1;
             assert secondOption != null;
             int second = secondOption.getAsInt() - 1;
-            int size = musicManager.scheduler.queue.size();
+            int size = musicManager.musicScheduler.queue.size();
 
             if (first >= size || second >= size) {
                 embedBuilder.setDescription("Please enter a valid queue ids for both of the songs.").setColor(Color.RED);
@@ -43,8 +43,8 @@ public class SwapCommand implements ISlashCommand {
                     trackList.set(first, trackList.get(second));
                     trackList.set(second, temp);
 
-                    musicManager.scheduler.queue.clear();
-                    musicManager.scheduler.queueAll(trackList);
+                    musicManager.musicScheduler.queue.clear();
+                    musicManager.musicScheduler.queueAll(trackList);
 
                     embedBuilder.setDescription("Successfully swapped order of the two songs").setColor(Color.GREEN);
                 } else if (trackList.size() == 1) {

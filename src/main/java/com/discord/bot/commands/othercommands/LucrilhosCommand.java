@@ -36,11 +36,11 @@ public class LucrilhosCommand implements ISlashCommand {
         AudioManager audioManager = guild.getAudioManager();
 
         audioManager.openAudioConnection(voiceChannel);
-        GuildAudioManager musicManager = playerManagerService.getMusicManager(guild);
+        GuildAudioManager musicManager = playerManagerService.getAudioManager(guild);
         audioManager.setSendingHandler(musicManager.getSendHandler());
 
         String soundFile = this.getClass().getClassLoader().getResource("sounds/lucrilhos.ogg").getFile();
-        playerManagerService.playSound(guild, soundFile);
+        playerManagerService.loadAndPlaySfx(guild, soundFile);
 
         event.reply("Isso é falta de lu-cri-lhos!").queue();
     }

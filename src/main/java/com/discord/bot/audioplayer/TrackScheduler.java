@@ -17,20 +17,20 @@ public class TrackScheduler extends AudioEventAdapter {
     private final static Logger logger = LoggerFactory.getLogger(TrackScheduler.class);
     public final AudioPlayer player;
     public final BlockingQueue<AudioTrack> queue;
-    public boolean repeating = false;
+    private final GuildAudioManager guildAudioManager;
     private final Guild guild;
-    private int COUNT = 0;
+    public boolean repeating = false;
 
-    public TrackScheduler(AudioPlayer player, Guild guild) {
+    public TrackScheduler(AudioPlayer player, GuildAudioManager guildAudioManager, Guild guild) {
         this.player = player;
         this.queue = new LinkedBlockingQueue<>();
+        this.guildAudioManager = guildAudioManager;
         this.guild = guild;
     }
 
     public void queue(AudioTrack track) {
         if (!this.player.startTrack(track, true)) {
             boolean offerSuccess = this.queue.offer(track);
-
             if (!offerSuccess) {
                 logger.error("Queue is full, could not add track: " + track.getInfo().title);
             }
@@ -50,40 +50,33 @@ public class TrackScheduler extends AudioEventAdapter {
 
     public void nextTrack() {
         this.player.startTrack(this.queue.poll(), false);
-        if (player.getPlayingTrack() == null) {
+        checkToDisconnect();
+    }
+
+    private void checkToDisconnect() {
+        if (guildAudioManager.getMusicPlayer().getPlayingTrack() == null &&
+            guildAudioManager.getSfxPlayer().getPlayingTrack() == null) {
+            logger.info("No tracks are playing. Disconnecting from the voice channel.");
             guild.getAudioManager().closeAudioConnection();
         }
-        if (repeating) {
-            repeating = false;
+    }
+
+    @Override
+    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        if (endReason.mayStartNext) {
+            if (this.repeating) {
+                this.player.startTrack(track.makeClone(), false);
+            } else {
+                nextTrack();
+            }
+        } else {
+            checkToDisconnect();
         }
     }
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        if (COUNT >= 1) {
-            COUNT = 0;
-            logger.error("Error occurred", exception);
-            return;
-        }
-        player.startTrack(track.makeClone(), false);
-        COUNT++;
-    }
-
-    @Override
-    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if (guild.getSelfMember().getVoiceState() != null && guild.getSelfMember().getVoiceState().getChannel() != null) {
-            // If bot is alone in the voice
-            if (guild.getSelfMember().getVoiceState().getChannel().getMembers().size() == 1) {
-                guild.getAudioManager().closeAudioConnection();
-                return;
-            }
-        }
-        if (endReason.mayStartNext) {
-            if (this.repeating) {
-                this.player.startTrack(track.makeClone(), false);
-                return;
-            }
-            nextTrack();
-        }
+        logger.error("Error occurred while playing track: {}", track.getInfo().title, exception);
+        nextTrack();
     }
 }

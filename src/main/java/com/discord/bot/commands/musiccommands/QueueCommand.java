@@ -21,7 +21,7 @@ public class QueueCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
         boolean ephemeral = utils.isEphemeralOptionEnabled(event);
-        BlockingQueue<AudioTrack> queue = playerManagerService.getMusicManager(event.getGuild()).scheduler.queue;
+        BlockingQueue<AudioTrack> queue = playerManagerService.getAudioManager(event.getGuild()).musicScheduler.queue;
         var trackList = queue.stream().toList();
 
         if (queue.isEmpty()) {

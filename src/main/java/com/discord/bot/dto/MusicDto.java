@@ -11,5 +11,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MusicDto {
    private String title;
-    private String youtubeUri;
+    private String reference;
 }

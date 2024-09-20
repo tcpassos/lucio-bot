@@ -53,9 +53,9 @@ public class MusicCommandUtils {
     }
 
     public void playerCleaner(GuildAudioManager musicManager) {
-        musicManager.scheduler.repeating = false;
-        musicManager.scheduler.player.setPaused(false);
-        musicManager.scheduler.player.stopTrack();
-        musicManager.scheduler.queue.clear();
+        musicManager.musicScheduler.repeating = false;
+        musicManager.musicScheduler.player.setPaused(false);
+        musicManager.musicScheduler.player.stopTrack();
+        musicManager.musicScheduler.queue.clear();
     }
 }

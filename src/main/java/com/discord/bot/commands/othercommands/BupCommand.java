@@ -36,11 +36,11 @@ public class BupCommand implements ISlashCommand {
         AudioManager audioManager = guild.getAudioManager();
 
         audioManager.openAudioConnection(voiceChannel);
-        GuildAudioManager musicManager = playerManagerService.getMusicManager(guild);
+        GuildAudioManager musicManager = playerManagerService.getAudioManager(guild);
         audioManager.setSendingHandler(musicManager.getSendHandler());
 
         String soundFile = this.getClass().getClassLoader().getResource("sounds/bup.ogg").getFile();
-        playerManagerService.playSound(guild, soundFile);
+        playerManagerService.loadAndPlaySfx(guild, soundFile);
 
         event.reply("Bup!").queue();
     }

@@ -27,8 +27,8 @@ public class RemoveCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
-            var queue = musicManager.scheduler.queue;
+            GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
+            var queue = musicManager.musicScheduler.queue;
 
             if (!queue.isEmpty()) {
                 var command = event.getSubcommandName();

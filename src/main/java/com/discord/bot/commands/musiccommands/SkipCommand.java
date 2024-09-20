@@ -21,7 +21,7 @@ public class SkipCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            playerManagerService.getMusicManager(event.getGuild()).scheduler.nextTrack();
+            playerManagerService.getAudioManager(event.getGuild()).musicScheduler.nextTrack();
             embedBuilder.setDescription("Song skipped").setColor(Color.GREEN);
         } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
 

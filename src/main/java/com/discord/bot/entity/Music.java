@@ -16,5 +16,5 @@ public class Music {
     private int id;
     private String title;
     @Column(name = "youtube_uri")
-    private String youtubeUri;
+    private String reference;
 }

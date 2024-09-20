@@ -56,7 +56,7 @@ public class PlayCommand implements ISlashCommand {
             int trackSize = multipleMusicDto.getMusicDtoList().size();
             if (trackSize != 0) {
                 if (botChannel == null) {
-                    GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
+                    GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
                     utils.playerCleaner(musicManager);
 
                     if (!userChannel.getGuild().getSelfMember().hasPermission(userChannel, Permission.VOICE_CONNECT)) {
