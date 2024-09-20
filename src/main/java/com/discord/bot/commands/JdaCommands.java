@@ -96,12 +96,8 @@ public class JdaCommands {
                         .addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString)
                                 .setRequired(false))
                         .setGuildOnly(true),
-                Commands.slash("volume", "Show the currently playing song.")
-                        .addOptions(new OptionData(OptionType.INTEGER, "volume",
-                                        "Player volume.")
-                                        .setRequired(true),
-                                new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString)
-                                        .setRequired(false))
+                Commands.slash("volume", "Define o volume do player.")
+                        .addOptions(new OptionData(OptionType.INTEGER, "volume", "Volume.").setRequired(false))
                         .setGuildOnly(true),
                 Commands.slash("mhelp", "Help page for the music commands.").addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString).setRequired(false)).setGuildOnly(true),
                 Commands.slash("lucrilhos", "Isso é falta de lu-cri-lhos!").setGuildOnly(true),

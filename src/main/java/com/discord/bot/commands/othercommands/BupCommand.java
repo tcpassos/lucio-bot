@@ -2,6 +2,7 @@ package com.discord.bot.commands.othercommands;
 
 import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.commands.ISlashCommand;
+import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.managers.AudioManager;
 @AllArgsConstructor
 public class BupCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
