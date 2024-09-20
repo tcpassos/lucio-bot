@@ -14,14 +14,9 @@ public class JdaCommands {
 
         globalCommands.addCommands(
                 Commands.slash("play", "Play a song on your voice channel.")
-                        .addOptions(new OptionData(OptionType.STRING, "query", "Song url or name.")
-                                        .setRequired(true),
-                                new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString)
-                                        .setRequired(false))
+                        .addOptions(new OptionData(OptionType.STRING, "query", "Song url or name.").setRequired(true))
                         .setGuildOnly(true),
                 Commands.slash("skip", "Skip the current song.")
-                        .addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString)
-                                .setRequired(false))
                         .setGuildOnly(true),
                 Commands.slash("forward", "Forward the current song x seconds.")
                         .addOptions(new OptionData(OptionType.INTEGER, "sec", "seconds")
@@ -109,7 +104,8 @@ public class JdaCommands {
                                         .setRequired(false))
                         .setGuildOnly(true),
                 Commands.slash("mhelp", "Help page for the music commands.").addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString).setRequired(false)).setGuildOnly(true),
-                Commands.slash("lucrilhos", "Isso é falta de lu-cri-lhos!").setGuildOnly(true)
+                Commands.slash("lucrilhos", "Isso é falta de lu-cri-lhos!").setGuildOnly(true),
+                Commands.slash("bup", "Bup!").setGuildOnly(true)
                 ).queue();
     }
 }

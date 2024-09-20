@@ -3,6 +3,7 @@ package com.discord.bot.commands;
 import com.discord.bot.commands.admincommands.GuildsCommand;
 import com.discord.bot.commands.admincommands.LogsCommand;
 import com.discord.bot.commands.musiccommands.*;
+import com.discord.bot.commands.othercommands.BupCommand;
 import com.discord.bot.commands.othercommands.LucrilhosCommand;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
@@ -68,6 +69,7 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());
         // Outros comandos
-        commandsMap.put("lucrilhos", new LucrilhosCommand());
+        commandsMap.put("lucrilhos", new LucrilhosCommand(playerManagerService));
+        commandsMap.put("bup", new BupCommand(playerManagerService));
     }
 }

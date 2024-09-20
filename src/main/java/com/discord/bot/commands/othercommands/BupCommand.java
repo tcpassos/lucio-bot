@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 @AllArgsConstructor
-public class LucrilhosCommand implements ISlashCommand {
+public class BupCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
 
     @Override
@@ -39,10 +39,10 @@ public class LucrilhosCommand implements ISlashCommand {
         GuildAudioManager musicManager = playerManagerService.getMusicManager(guild);
         audioManager.setSendingHandler(musicManager.getSendHandler());
 
-        String soundFile = this.getClass().getClassLoader().getResource("sounds/lucrilhos.ogg").getFile();
+        String soundFile = this.getClass().getClassLoader().getResource("sounds/bup.ogg").getFile();
         playerManagerService.playSound(guild, soundFile);
 
-        event.reply("Isso é falta de lu-cri-lhos!").queue();
+        event.reply("Bup!").queue();
     }
 
 }

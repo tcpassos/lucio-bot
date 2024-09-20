@@ -1,6 +1,6 @@
 package com.discord.bot.commands.musiccommands;
 
-import com.discord.bot.audioplayer.GuildMusicManager;
+import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
@@ -56,7 +56,7 @@ public class PlayCommand implements ISlashCommand {
             int trackSize = multipleMusicDto.getMusicDtoList().size();
             if (trackSize != 0) {
                 if (botChannel == null) {
-                    GuildMusicManager musicManager = playerManagerService.getMusicManager(event.getGuild());
+                    GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
                     utils.playerCleaner(musicManager);
 
                     if (!userChannel.getGuild().getSelfMember().hasPermission(userChannel, Permission.VOICE_CONNECT)) {

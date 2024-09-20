@@ -27,9 +27,9 @@ public class AudioMixerSendHandler implements AudioSendHandler {
     public ByteBuffer provide20MsAudio() {
         AudioFrame frameMusic = musicPlayer.provide();
         AudioFrame frameSfx = sfxPlayer.provide();
-
-        byte[] dataMusic = frameMusic != null ? frameMusic.getData() : new byte[1024];
-        byte[] dataSfx = frameSfx != null ? frameSfx.getData() : new byte[1024];
+        
+        byte[] dataMusic = frameMusic != null ? frameMusic.getData() : new byte[0];
+        byte[] dataSfx = frameSfx != null ? frameSfx.getData() : new byte[0];
 
         byte[] mixedData = mixAudio(dataMusic, dataSfx);
 
@@ -46,26 +46,12 @@ public class AudioMixerSendHandler implements AudioSendHandler {
     }
 
     private byte[] mixAudio(byte[] audio1, byte[] audio2) {
-        ByteBuffer buffer1 = ByteBuffer.wrap(audio1);
-        ByteBuffer buffer2 = ByteBuffer.wrap(audio2);
-        ByteBuffer mixedBuffer = ByteBuffer.allocate(1024);
+        // TODO: Implement mixing algorithm
 
-        while (mixedBuffer.remaining() >= 2) {
-            short sample1 = buffer1.remaining() >= 2 ? buffer1.getShort() : 0;
-            short sample2 = buffer2.remaining() >= 2 ? buffer2.getShort() : 0;
-
-            int mixedSample = sample1 + sample2;
-
-            // Evita saturação
-            if (mixedSample > Short.MAX_VALUE) {
-                mixedSample = Short.MAX_VALUE;
-            } else if (mixedSample < Short.MIN_VALUE) {
-                mixedSample = Short.MIN_VALUE;
-            }
-
-            mixedBuffer.putShort((short) mixedSample);
+        if (audio2.length == 0) {
+            return audio1;
+        } else {
+            return audio2;
         }
-
-        return mixedBuffer.array();
     }
 }

@@ -1,6 +1,6 @@
 package com.discord.bot.commands.musiccommands;
 
-import com.discord.bot.audioplayer.GuildMusicManager;
+import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.commands.ISlashCommand;
@@ -25,7 +25,7 @@ public class SwapCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            GuildMusicManager musicManager = playerManagerService.getMusicManager(event.getGuild());
+            GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
             List<AudioTrack> trackList = new ArrayList<>(musicManager.scheduler.queue);
             var firstOption = event.getOption("songnum1");
             var secondOption = event.getOption("songnum2");

@@ -1,10 +1,20 @@
 package com.discord.bot.service.audioplayer;
 
-import com.discord.bot.audioplayer.GuildMusicManager;
-import com.discord.bot.repository.MusicRepository;
+import java.awt.Color;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.entity.Music;
+import com.discord.bot.repository.MusicRepository;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -17,27 +27,18 @@ import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
-import java.awt.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class PlayerManagerService {
     private final static Logger logger = LoggerFactory.getLogger(PlayerManagerService.class);
-    private final Map<Long, GuildMusicManager> musicManagers;
+    private final Map<Long, GuildAudioManager> musicManagers;
     private final AudioPlayerManager audioPlayerManager;
     final MusicRepository musicRepository;
 
     public PlayerManagerService(MusicRepository musicRepository) {
         this.musicManagers = new HashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
-        
+
         // A implementação padrão do YoutubeAudioSourceManager não é mais suportada, estou usando a implementação do LavaLink
         YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
         this.audioPlayerManager.registerSourceManager(yt);
@@ -47,10 +48,10 @@ public class PlayerManagerService {
         this.musicRepository = musicRepository;
     }
 
-    public GuildMusicManager getMusicManager(Guild guild) {
+    public GuildAudioManager getMusicManager(Guild guild) {
         if (guild != null) {
             return this.musicManagers.computeIfAbsent(guild.getIdLong(), (guildId) -> {
-                final GuildMusicManager guildMusicManager = new GuildMusicManager(this.audioPlayerManager, guild);
+                final GuildAudioManager guildMusicManager = new GuildAudioManager(this.audioPlayerManager, guild);
 
                 guild.getAudioManager().setSendingHandler(guildMusicManager.getSendHandler());
 
@@ -62,7 +63,7 @@ public class PlayerManagerService {
     }
 
     public void loadAndPlay(SlashCommandInteractionEvent event, MusicDto musicDto, boolean ephemeral) {
-        final GuildMusicManager musicManager = this.getMusicManager(event.getGuild());
+        final GuildAudioManager musicManager = this.getMusicManager(event.getGuild());
         EmbedBuilder embedBuilder = new EmbedBuilder();
         this.audioPlayerManager.loadItemOrdered(musicManager, musicDto.getYoutubeUri(), new AudioLoadResultHandler() {
             @Override
@@ -108,7 +109,7 @@ public class PlayerManagerService {
 
     @Async
     public void loadMultipleAndPlay(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto, boolean ephemeral) {
-        final GuildMusicManager musicManager = this.getMusicManager(event.getGuild());
+        final GuildAudioManager musicManager = this.getMusicManager(event.getGuild());
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         if (multipleMusicDto.getFailCount() > 0) {
@@ -156,10 +157,10 @@ public class PlayerManagerService {
         }
     }
 
-    public void playSoundEffect(Guild guild, String resourcePath) {
-        GuildMusicManager guildMusicManager = getMusicManager(guild);
+    public void playSound(Guild guild, String path) {
+        GuildAudioManager guildMusicManager = getMusicManager(guild);
     
-        audioPlayerManager.loadItem("resource:" + resourcePath, new AudioLoadResultHandler() {
+        audioPlayerManager.loadItem(path, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 guildMusicManager.getSfxPlayer().startTrack(track, false);

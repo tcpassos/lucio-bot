@@ -1,6 +1,6 @@
 package com.discord.bot.commands.musiccommands;
 
-import com.discord.bot.audioplayer.GuildMusicManager;
+import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -27,7 +27,7 @@ public class RemoveCommand implements ISlashCommand {
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
-            GuildMusicManager musicManager = playerManagerService.getMusicManager(event.getGuild());
+            GuildAudioManager musicManager = playerManagerService.getMusicManager(event.getGuild());
             var queue = musicManager.scheduler.queue;
 
             if (!queue.isEmpty()) {
