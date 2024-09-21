@@ -1,20 +1,28 @@
 package com.discord.bot;
 
-import com.discord.bot.commands.CommandManager;
-import com.discord.bot.commands.JdaCommands;
-import com.discord.bot.commands.AdminCommands;
-import com.discord.bot.service.*;
-import com.discord.bot.service.audioplayer.PlayerManagerService;
-import jakarta.annotation.PostConstruct;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.StringUtils;
+
+import com.discord.bot.commands.AdminCommands;
+import com.discord.bot.commands.CommandManager;
+import com.discord.bot.commands.JdaCommands;
+import com.discord.bot.service.MessageService;
+import com.discord.bot.service.MusicCommandUtils;
+import com.discord.bot.service.RestService;
+import com.discord.bot.service.SpotifyTokenService;
+import com.discord.bot.service.audioplayer.PlayerManagerService;
+
+import jakarta.annotation.PostConstruct;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 
 @Configuration
 @EnableScheduling
@@ -24,6 +32,7 @@ public class LucioBot {
     final PlayerManagerService playerManagerService;
     final MusicCommandUtils musicCommandUtils;
     final SpotifyTokenService spotifyTokenService;
+    final MessageService messageService;
 
     @Value("${discord.bot.token}")
     private String discordToken;
@@ -34,21 +43,32 @@ public class LucioBot {
     @Value("${discord.admin.user.id}")
     private String adminUserId;
 
+    @Value("${discord.bot.language}")
+    private String botLanguage;
+
     public LucioBot(RestService restService, PlayerManagerService playerManagerService,
-                      MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService) {
+                    MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
+                    MessageService messageService) {
         this.restService = restService;
         this.playerManagerService = playerManagerService;
         this.musicCommandUtils = musicCommandUtils;
         this.spotifyTokenService = spotifyTokenService;
+        this.messageService = messageService;
     }
 
     @PostConstruct
     public void startDiscordBot() throws InterruptedException {
+        // If specified, change the bot language
+        if (StringUtils.hasText(botLanguage)) {
+            Locale locale = Locale.forLanguageTag(botLanguage);
+            messageService.changeLanguage(locale);
+        }
+
         JDA jda = JDABuilder.createDefault(discordToken)
-                .addEventListeners(new CommandManager(restService, playerManagerService, musicCommandUtils, adminUserId))
+                .addEventListeners(new CommandManager(restService, playerManagerService, messageService, musicCommandUtils, adminUserId))
                 .setActivity(Activity.listening("Não para, não para, não para não!")).build();
         jda.awaitReady();
-        new JdaCommands().addJdaCommands(jda);
+        new JdaCommands(messageService).addJdaCommands(jda);
         new AdminCommands().addAdminCommands(jda, adminServerId);
         logger.info("Starting bot is done!");
     }

@@ -4,6 +4,7 @@ import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -22,32 +23,30 @@ import java.util.List;
 public class PlayCommand implements ISlashCommand {
     RestService restService;
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         var queryOption = event.getOption("query");
-        var ephemeralOption = event.getOption("ephemeral");
-        boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
-        event.deferReply(ephemeral).queue();
+        event.deferReply(true).queue();
 
         assert queryOption != null;
         String query = queryOption.getAsString().trim();
         MultipleMusicDto multipleMusicDto = getSongUrl(query);
         if (multipleMusicDto.getCount() == 0) {
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                            .setDescription("Youtube quota has exceeded. " +
-                                    "Please use youtube urls to play music for today.")
+                            .setDescription(messageService.getMessage("youtube.api.limit"))
                             .setColor(Color.RED)
                             .build())
-                    .setEphemeral(ephemeral)
+                    .setEphemeral(true)
                     .queue();
             return;
         }
-        playMusic(event, multipleMusicDto, ephemeral);
+        playMusic(event, multipleMusicDto);
     }
 
-    private void playMusic(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto, boolean ephemeral) {
+    private void playMusic(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
         AudioChannel userChannel = getAudioChannel(event, false);
         AudioChannel botChannel = getAudioChannel(event, true);
@@ -61,10 +60,10 @@ public class PlayCommand implements ISlashCommand {
 
                     if (!userChannel.getGuild().getSelfMember().hasPermission(userChannel, Permission.VOICE_CONNECT)) {
                         event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                                        .setDescription("Bot does not have permission to join the voice channel.")
+                                        .setDescription(messageService.getMessage("bot.voice.notallowed"))
                                         .setColor(Color.RED)
                                         .build())
-                                .setEphemeral(ephemeral)
+                                .setEphemeral(true)
                                 .queue();
                         return;
                     }
@@ -73,15 +72,15 @@ public class PlayCommand implements ISlashCommand {
                 }
                 if (botChannel.equals(userChannel)) {
                     if (trackSize == 1) playerManagerService.loadAndPlay(event, multipleMusicDto.getMusicDtoList()
-                            .get(0), ephemeral);
-                    else playerManagerService.loadMultipleAndPlay(event, multipleMusicDto, ephemeral);
+                            .get(0), false);
+                    else playerManagerService.loadMultipleAndPlay(event, multipleMusicDto, false);
                 } else
-                    embedBuilder.setDescription("Please be in the same voice channel as the bot.").setColor(Color.RED);
-            } else embedBuilder.setDescription("No tracks found.").setColor(Color.RED);
-        } else embedBuilder.setDescription("Please join a voice channel.").setColor(Color.RED);
+                    embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
+            } else embedBuilder.setDescription(messageService.getMessage("bot.notrackfound")).setColor(Color.RED);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinvoice")).setColor(Color.RED);
 
         if (!embedBuilder.isEmpty())
-            event.getHook().sendMessageEmbeds(embedBuilder.build()).setEphemeral(ephemeral).queue();
+            event.getHook().sendMessageEmbeds(embedBuilder.build()).setEphemeral(true).queue();
     }
 
     private AudioChannel getAudioChannel(SlashCommandInteractionEvent event, boolean self) {

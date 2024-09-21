@@ -5,6 +5,7 @@ import com.discord.bot.commands.admincommands.LogsCommand;
 import com.discord.bot.commands.musiccommands.*;
 import com.discord.bot.commands.othercommands.BupCommand;
 import com.discord.bot.commands.othercommands.LucrilhosCommand;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -19,14 +20,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CommandManager extends ListenerAdapter {
     final RestService restService;
     final PlayerManagerService playerManagerService;
+    final MessageService messageService;
     final MusicCommandUtils musicCommandUtils;
     private final String adminUserId;
     private Map<String, ISlashCommand> commandsMap;
 
     public CommandManager(RestService restService, PlayerManagerService playerManagerService,
-                          MusicCommandUtils musicCommandUtils, String adminUserId) {
+                          MessageService messageService, MusicCommandUtils musicCommandUtils,
+                          String adminUserId) {
         this.restService = restService;
         this.playerManagerService = playerManagerService;
+        this.messageService = messageService;
         this.musicCommandUtils = musicCommandUtils;
         this.adminUserId = adminUserId;
         commandMapper();
@@ -54,7 +58,7 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("guilds", new GuildsCommand(adminUserId));
         commandsMap.put("logs", new LogsCommand(adminUserId));
         // Comandos de música
-        commandsMap.put("play", new PlayCommand(restService, playerManagerService, musicCommandUtils));
+        commandsMap.put("play", new PlayCommand(restService, playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("skip", new SkipCommand(playerManagerService, musicCommandUtils));
         commandsMap.put("forward", new ForwardCommand(playerManagerService, musicCommandUtils));
         commandsMap.put("rewind", new RewindCommand(playerManagerService, musicCommandUtils));
