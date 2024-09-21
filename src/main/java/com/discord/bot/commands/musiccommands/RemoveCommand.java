@@ -2,6 +2,7 @@ package com.discord.bot.commands.musiccommands;
 
 import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.commands.ISlashCommand;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -18,13 +19,12 @@ import java.util.concurrent.BlockingQueue;
 @AllArgsConstructor
 public class RemoveCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        var ephemeralOption = event.getOption("ephemeral");
-        boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
             GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
@@ -39,11 +39,11 @@ public class RemoveCommand implements ISlashCommand {
                         case "between" -> handleBetweenCommand(event, queue, embedBuilder);
                         case "all" -> handleAllCommand(queue, embedBuilder);
                     }
-                } else embedBuilder.setDescription("Please specify subcommand.").setColor(Color.RED);
-            } else embedBuilder.setDescription("Song queue is empty.").setColor(Color.RED);
-        } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
+                } else embedBuilder.setDescription(messageService.getMessage("command.empty.subcommand")).setColor(Color.RED);
+            } else embedBuilder.setDescription(messageService.getMessage("bot.queue.empty")).setColor(Color.RED);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
 
-        event.replyEmbeds(embedBuilder.build()).setEphemeral(ephemeral).queue();
+        event.replyEmbeds(embedBuilder.build()).setEphemeral(true).queue();
     }
 
     private void handleSingleCommand(SlashCommandInteractionEvent event, BlockingQueue<AudioTrack> queue, EmbedBuilder embedBuilder) {
@@ -60,8 +60,8 @@ public class RemoveCommand implements ISlashCommand {
             //noinspection ResultOfMethodCallIgnored
             queue.remove(removedSong);
 
-            embedBuilder.setDescription("Song removed from the queue.").setColor(Color.GREEN);
-        } else embedBuilder.setDescription("Invalid song index. Please provide a valid index.").setColor(Color.RED);
+            embedBuilder.setDescription(messageService.getMessage("bot.queue.removedsong")).setColor(Color.GREEN);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.queue.invalidsongindex")).setColor(Color.RED);
     }
 
     private void handleBetweenCommand(SlashCommandInteractionEvent event, BlockingQueue<AudioTrack> queue, EmbedBuilder embedBuilder) {
@@ -81,15 +81,15 @@ public class RemoveCommand implements ISlashCommand {
             //noinspection SuspiciousMethodCalls
             queue.removeAll(songsToRemove);
 
-            embedBuilder.setDescription("Removed songs from the queue.").setColor(Color.GREEN);
+            embedBuilder.setDescription(messageService.getMessage("bot.queue.removedsongs")).setColor(Color.GREEN);
         } else embedBuilder
-                .setDescription("Indexes are not valid for the current queue. Please check song numbers again.")
+                .setDescription(messageService.getMessage("bot.queue.invalidsongindex"))
                 .setColor(Color.RED);
     }
 
     private void handleAllCommand(BlockingQueue<AudioTrack> queue, EmbedBuilder embedBuilder) {
         //noinspection SuspiciousMethodCalls
         queue.removeAll(Arrays.asList(queue.toArray()));
-        embedBuilder.setDescription("Removed songs from the queue.").setColor(Color.GREEN);
+        embedBuilder.setDescription(messageService.getMessage("bot.queue.removedsongs")).setColor(Color.GREEN);
     }
 }

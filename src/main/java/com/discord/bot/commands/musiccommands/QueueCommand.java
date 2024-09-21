@@ -1,5 +1,6 @@
 package com.discord.bot.commands.musiccommands;
 
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.commands.ISlashCommand;
@@ -15,17 +16,17 @@ import java.util.concurrent.BlockingQueue;
 @AllArgsConstructor
 public class QueueCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        boolean ephemeral = utils.isEphemeralOptionEnabled(event);
         BlockingQueue<AudioTrack> queue = playerManagerService.getAudioManager(event.getGuild()).musicScheduler.queue;
         var trackList = queue.stream().toList();
 
         if (queue.isEmpty()) {
-            sendEmptyQueueResponse(event, embedBuilder, ephemeral);
+            sendEmptyQueueResponse(event, embedBuilder);
             return;
         }
 
@@ -34,33 +35,32 @@ public class QueueCommand implements ISlashCommand {
         int page = pageOption == null ? 1 : Math.min(Math.max(pageOption.getAsInt(), 1), totalPages);
 
         if (page < 1 || page > totalPages) {
-            sendInvalidPageResponse(event, embedBuilder, ephemeral, totalPages);
+            sendInvalidPageResponse(event, embedBuilder, totalPages);
             return;
         }
 
         embedBuilder = utils.queueBuilder(embedBuilder, page, queue, trackList);
 
         event.replyEmbeds(embedBuilder.build()).addActionRow(
-                        Button.secondary("prev", "Previous Page")
+                        Button.secondary("prev", messageService.getMessage("bot.queue.page.previous"))
                                 .withDisabled(page == 1),
-                        Button.secondary("next", "Next Page")
+                        Button.secondary("next", messageService.getMessage("bot.queue.page.next"))
                                 .withDisabled(page == totalPages))
-                .setEphemeral(ephemeral)
+                .setEphemeral(true)
                 .queue();
     }
 
-    private void sendEmptyQueueResponse(SlashCommandInteractionEvent event, EmbedBuilder embedBuilder, boolean ephemeral) {
-        embedBuilder.setDescription("The queue is currently empty").setColor(Color.RED);
+    private void sendEmptyQueueResponse(SlashCommandInteractionEvent event, EmbedBuilder embedBuilder) {
+        embedBuilder.setDescription(messageService.getMessage("bot.queue.empty")).setColor(Color.RED);
         event.replyEmbeds(embedBuilder.build())
-                .setEphemeral(ephemeral)
+                .setEphemeral(true)
                 .queue();
     }
 
-    private void sendInvalidPageResponse(SlashCommandInteractionEvent event, EmbedBuilder embedBuilder, boolean ephemeral, int totalPages) {
-        embedBuilder.setDescription("Invalid page number. Please enter a valid page number " +
-                "between 1 and " + totalPages).setColor(Color.RED);
+    private void sendInvalidPageResponse(SlashCommandInteractionEvent event, EmbedBuilder embedBuilder, int totalPages) {
+        embedBuilder.setDescription(messageService.getMessage("bot.queue.page.invalid", totalPages)).setColor(Color.RED);
         event.replyEmbeds(embedBuilder.build())
-                .setEphemeral(ephemeral)
+                .setEphemeral(true)
                 .queue();
     }
 }

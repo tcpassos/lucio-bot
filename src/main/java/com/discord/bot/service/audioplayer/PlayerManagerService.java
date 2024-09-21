@@ -16,6 +16,7 @@ import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.entity.Music;
 import com.discord.bot.repository.MusicRepository;
+import com.discord.bot.service.MessageService;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -39,12 +40,13 @@ public class PlayerManagerService {
     private final Map<Long, GuildAudioManager> musicManagers;
     private final AudioPlayerManager audioPlayerManager;
     final MusicRepository musicRepository;
+    final MessageService messageService;
 
-    public PlayerManagerService(MusicRepository musicRepository) {
+    public PlayerManagerService(MusicRepository musicRepository, MessageService messageService) {
         this.musicManagers = new HashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
 
-        // A implementação padrão do YoutubeAudioSourceManager não é mais suportada, estou usando a implementação do LavaLink
+        // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
         this.audioPlayerManager.registerSourceManager(yt);
 
@@ -53,6 +55,7 @@ public class PlayerManagerService {
         AudioSourceManagers.registerRemoteSources(this.audioPlayerManager);
         AudioSourceManagers.registerLocalSource(this.audioPlayerManager);
         this.musicRepository = musicRepository;
+        this.messageService = messageService;
     }
 
     public GuildAudioManager getAudioManager(Guild guild) {
@@ -76,8 +79,7 @@ public class PlayerManagerService {
             @Override
             public void trackLoaded(AudioTrack track) {
                 event.getHook().sendMessageEmbeds(embedBuilder
-                                .setDescription("Song added to queue: " + track.getInfo().title
-                                        + "\n in queue: " + (musicManager.musicScheduler.queue.size() + 1))
+                                .setDescription(messageService.getMessage("bot.queue.added.song", track.getInfo().title, musicManager.musicScheduler.queue.size() + 1))
                                 .setColor(Color.GREEN)
                                 .build())
                         .setEphemeral(ephemeral)
@@ -95,7 +97,7 @@ public class PlayerManagerService {
                     musicManager.musicScheduler.queue(track);
                 }
                 event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                                .setDescription(tracks.size() + " song added to queue.")
+                                .setDescription(messageService.getMessage("bot.queue.added.playlist", tracks.size()))
                                 .setColor(Color.GREEN)
                                 .build())
                         .setEphemeral(ephemeral)

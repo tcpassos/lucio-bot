@@ -22,8 +22,8 @@ public class AudioMixerSendHandler implements AudioSendHandler {
     public boolean canProvide() {
         return true;
     }
+    
 
-    @Override
     public ByteBuffer provide20MsAudio() {
         AudioFrame frameMusic = musicPlayer.provide();
         AudioFrame frameSfx = sfxPlayer.provide();
@@ -31,11 +31,14 @@ public class AudioMixerSendHandler implements AudioSendHandler {
         byte[] dataMusic = frameMusic != null ? frameMusic.getData() : null;
         byte[] dataSfx = frameSfx != null ? frameSfx.getData() : null;
     
-        byte[] mixedData;
+        if (dataMusic == null && dataSfx == null) {
+            return buffer.clear().flip();  // Empty buffer
+        }
     
-        if (dataMusic == null || dataMusic.length == 0) {
-            mixedData = dataSfx != null ? dataSfx : new byte[0];
-        } else if (dataSfx == null || dataSfx.length == 0) {
+        byte[] mixedData;
+        if (dataMusic == null) {
+            mixedData = dataSfx;
+        } else if (dataSfx == null) {
             mixedData = dataMusic;
         } else {
             mixedData = mixAudio(dataMusic, dataSfx);
@@ -46,7 +49,7 @@ public class AudioMixerSendHandler implements AudioSendHandler {
         buffer.flip();
     
         return buffer;
-    }
+    }    
 
     @Override
     public boolean isOpus() {

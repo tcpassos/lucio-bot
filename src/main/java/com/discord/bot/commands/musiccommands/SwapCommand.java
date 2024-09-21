@@ -1,6 +1,7 @@
 package com.discord.bot.commands.musiccommands;
 
 import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.commands.ISlashCommand;
@@ -16,13 +17,12 @@ import java.util.List;
 @AllArgsConstructor
 public class SwapCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        var ephemeralOption = event.getOption("ephemeral");
-        boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
             GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
@@ -36,7 +36,7 @@ public class SwapCommand implements ISlashCommand {
             int size = musicManager.musicScheduler.queue.size();
 
             if (first >= size || second >= size) {
-                embedBuilder.setDescription("Please enter a valid queue ids for both of the songs.").setColor(Color.RED);
+                embedBuilder.setDescription(messageService.getMessage("bot.song.swap.invalid")).setColor(Color.RED);
             } else {
                 if (trackList.size() > 1) {
                     AudioTrack temp = trackList.get(first);
@@ -46,13 +46,13 @@ public class SwapCommand implements ISlashCommand {
                     musicManager.musicScheduler.queue.clear();
                     musicManager.musicScheduler.queueAll(trackList);
 
-                    embedBuilder.setDescription("Successfully swapped order of the two songs").setColor(Color.GREEN);
+                    embedBuilder.setDescription(messageService.getMessage("bot.song.swap.success")).setColor(Color.GREEN);
                 } else if (trackList.size() == 1) {
-                    embedBuilder.setDescription("There is only one song in queue.").setColor(Color.RED);
-                } else embedBuilder.setDescription("Queue is empty.").setColor(Color.RED);
+                    embedBuilder.setDescription(messageService.getMessage("bot.queue.onesong")).setColor(Color.RED);
+                } else embedBuilder.setDescription(messageService.getMessage("bot.queue.empty")).setColor(Color.RED);
             }
-        } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
 
-        event.replyEmbeds(embedBuilder.build()).setEphemeral(ephemeral).queue();
+        event.replyEmbeds(embedBuilder.build()).setEphemeral(false).queue();
     }
 }

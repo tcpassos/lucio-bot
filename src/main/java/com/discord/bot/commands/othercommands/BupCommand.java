@@ -3,6 +3,7 @@ package com.discord.bot.commands.othercommands;
 import java.awt.Color;
 
 import com.discord.bot.commands.ISlashCommand;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 @AllArgsConstructor
 public class BupCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
@@ -24,8 +26,7 @@ public class BupCommand implements ISlashCommand {
 
         if (memberVoiceState == null || !memberVoiceState.inAudioChannel()) {
             EmbedBuilder embedBuilder = new EmbedBuilder();
-            embedBuilder.setDescription(memberToBup.getAsMention() + " precisa estar em um canal de voz.")
-                        .setColor(Color.RED);
+            embedBuilder.setDescription(messageService.getMessage("bot.user.notinvoice", memberToBup.getAsMention())).setColor(Color.RED);
             event.replyEmbeds(embedBuilder.build()).setEphemeral(true).queue();
             return;
         }

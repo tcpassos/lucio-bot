@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
+import com.discord.bot.activity.ActivityListener;
 import com.discord.bot.commands.AdminCommands;
 import com.discord.bot.commands.CommandManager;
 import com.discord.bot.commands.JdaCommands;
@@ -23,6 +24,7 @@ import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 
 @Configuration
 @EnableScheduling
@@ -65,8 +67,13 @@ public class LucioBot {
         }
 
         JDA jda = JDABuilder.createDefault(discordToken)
-                .addEventListeners(new CommandManager(restService, playerManagerService, messageService, musicCommandUtils, adminUserId))
-                .setActivity(Activity.listening("Não para, não para, não para não!")).build();
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MESSAGES)
+                .addEventListeners(
+                    new CommandManager(restService, playerManagerService, messageService, musicCommandUtils, adminUserId),
+                    new ActivityListener(messageService)
+                )
+                .setActivity(Activity.listening("Não para, não para, não para não!"))
+                .build();
         jda.awaitReady();
         new JdaCommands(messageService).addJdaCommands(jda);
         new AdminCommands().addAdminCommands(jda, adminServerId);

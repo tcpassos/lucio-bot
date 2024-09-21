@@ -1,6 +1,7 @@
 package com.discord.bot.commands.musiccommands;
 
 import com.discord.bot.commands.ISlashCommand;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -14,13 +15,12 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 public class NowPlayingCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        var ephemeralOption = event.getOption("ephemeral");
-        boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
             AudioTrack track = playerManagerService.getAudioManager(event.getGuild()).musicPlayer.getPlayingTrack();
@@ -39,16 +39,16 @@ public class NowPlayingCommand implements ISlashCommand {
                 var timestamp = String.format("%02d:%02d:%02d", hours, minutes, seconds);
                 var remaining = String.format("%02d:%02d:%02d", remainingHours, remainingMinutes, remainingSecs);
 
-                embedBuilder.setTitle("Now playing")
+                embedBuilder.setTitle(messageService.getMessage("bot.song.nowplaying"))
                         .setDescription(":headphones: [" + track.getInfo().title + "](" + track.getInfo().uri + ")")
                         .addField(":watch: Timestamp", "```" + " " + timestamp + "```", true)
-                        .addField(":stopwatch: Remaining", "```" + " " + remaining + "```", true)
+                        .addField(":stopwatch: " + messageService.getMessage("bot.song.remaining"), "```" + " " + remaining + "```", true)
                         .setColor(Color.GREEN);
-            } else embedBuilder.setDescription("There is no song currently playing.").setColor(Color.RED);
-        } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
+            } else embedBuilder.setDescription(messageService.getMessage("bot.song.notplaying")).setColor(Color.RED);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
 
         event.replyEmbeds(embedBuilder.build())
-                .setEphemeral(ephemeral)
+                .setEphemeral(true)
                 .queue();
     }
 }

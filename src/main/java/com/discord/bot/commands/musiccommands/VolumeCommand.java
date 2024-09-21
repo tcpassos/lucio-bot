@@ -3,6 +3,7 @@ package com.discord.bot.commands.musiccommands;
 import java.awt.Color;
 
 import com.discord.bot.commands.ISlashCommand;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 @AllArgsConstructor
 public class VolumeCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
@@ -26,7 +28,7 @@ public class VolumeCommand implements ISlashCommand {
             int volume = volumeOption == null ? musicPlayer.getVolume() : volumeOption.getAsInt();
 
             if (volume < 0 || volume > 100) {
-                embedBuilder.setDescription("O volume deve estar entre 0 e 100.").setColor(Color.RED);
+                embedBuilder.setDescription(messageService.getMessage("bot.song.volume.invalid")).setColor(Color.RED);
                 event.replyEmbeds(embedBuilder.build())
                      .setEphemeral(true)
                      .queue();
@@ -38,10 +40,10 @@ public class VolumeCommand implements ISlashCommand {
             }
 
             embedBuilder.setTitle("Volume")
-                    .setDescription(":loud_sound: Volume definido para " + volume + "%.")
+                    .setDescription(messageService.getMessage("bot.song.volume.set", volume))
                     .setColor(Color.GREEN);
         } else {
-            embedBuilder.setDescription("Você precisa estar no mesmo canal de voz que o bot.").setColor(Color.RED);
+            embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
         }
 
         event.replyEmbeds(embedBuilder.build())

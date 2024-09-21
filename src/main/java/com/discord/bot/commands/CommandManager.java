@@ -54,27 +54,27 @@ public class CommandManager extends ListenerAdapter {
 
     private void commandMapper() {
         commandsMap = new ConcurrentHashMap<>();
-        // Comandos administrativos
+        // Admin commands
         commandsMap.put("guilds", new GuildsCommand(adminUserId));
         commandsMap.put("logs", new LogsCommand(adminUserId));
-        // Comandos de música
+        // Music commands
         commandsMap.put("play", new PlayCommand(restService, playerManagerService, messageService, musicCommandUtils));
-        commandsMap.put("skip", new SkipCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("forward", new ForwardCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("rewind", new RewindCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("pause", new PauseCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("resume", new ResumeCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("leave", new LeaveCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("queue", new QueueCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("swap", new SwapCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("shuffle", new ShuffleCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("loop", new LoopCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("remove", new RemoveCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, musicCommandUtils));
-        commandsMap.put("volume", new VolumeCommand(playerManagerService, musicCommandUtils));
+        commandsMap.put("skip", new SkipCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("forward", new ForwardCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("rewind", new RewindCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("pause", new PauseCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("resume", new ResumeCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("leave", new LeaveCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("queue", new QueueCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("swap", new SwapCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("shuffle", new ShuffleCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("loop", new LoopCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("remove", new RemoveCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("volume", new VolumeCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());
-        // Outros comandos
+        // Other commands
         commandsMap.put("lucrilhos", new LucrilhosCommand(playerManagerService));
-        commandsMap.put("bup", new BupCommand(playerManagerService, musicCommandUtils));
+        commandsMap.put("bup", new BupCommand(playerManagerService, messageService, musicCommandUtils));
     }
 }

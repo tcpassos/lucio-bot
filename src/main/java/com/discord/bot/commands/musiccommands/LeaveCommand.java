@@ -1,6 +1,7 @@
 package com.discord.bot.commands.musiccommands;
 
 import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.commands.ISlashCommand;
@@ -14,13 +15,12 @@ import java.awt.*;
 @AllArgsConstructor
 public class LeaveCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        var ephemeralOption = event.getOption("ephemeral");
-        boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
         if (utils.channelControl(event)) {
             GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
@@ -29,9 +29,9 @@ public class LeaveCommand implements ISlashCommand {
             utils.playerCleaner(musicManager);
             audioManager.closeAudioConnection();
 
-            embedBuilder.setDescription("Bye.").setColor(Color.GREEN);
-        } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
+            embedBuilder.setDescription(messageService.getMessage("bot.bye")).setColor(Color.GREEN);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
 
-        event.replyEmbeds(embedBuilder.build()).setEphemeral(ephemeral).queue();
+        event.replyEmbeds(embedBuilder.build()).setEphemeral(false).queue();
     }
 }

@@ -1,5 +1,6 @@
 package com.discord.bot.commands.musiccommands;
 
+import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.commands.ISlashCommand;
@@ -12,6 +13,7 @@ import java.awt.*;
 @AllArgsConstructor
 public class SkipCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    MessageService messageService;
     MusicCommandUtils utils;
 
     @Override
@@ -22,8 +24,8 @@ public class SkipCommand implements ISlashCommand {
 
         if (utils.channelControl(event)) {
             playerManagerService.getAudioManager(event.getGuild()).musicScheduler.nextTrack();
-            embedBuilder.setDescription("Song skipped").setColor(Color.GREEN);
-        } else embedBuilder.setDescription("Please be in a same voice channel as bot.").setColor(Color.RED);
+            embedBuilder.setDescription(messageService.getMessage("bot.song.skipped")).setColor(Color.GREEN);
+        } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
 
         event.replyEmbeds(embedBuilder.build()).setEphemeral(ephemeral).queue();
     }

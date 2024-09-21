@@ -5,6 +5,8 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,9 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(AudioTrack track) {
-        if (!this.player.startTrack(track, true)) {
+        if (this.player.startTrack(track, true)) {
+            this.guild.getJDA().getPresence().setActivity(Activity.listening(track.getInfo().title));
+        } else {
             boolean offerSuccess = this.queue.offer(track);
             if (!offerSuccess) {
                 logger.error("Queue is full, could not add track: " + track.getInfo().title);
@@ -50,15 +54,21 @@ public class TrackScheduler extends AudioEventAdapter {
 
     public void nextTrack() {
         this.player.startTrack(this.queue.poll(), false);
-        checkToDisconnect();
+        if (!checkToDisconnect()) {
+            this.guild.getJDA().getPresence().setActivity(Activity.listening(this.player.getPlayingTrack().getInfo().title));
+        } else {
+            this.guild.getJDA().getPresence().setActivity(null);
+        }
     }
 
-    private void checkToDisconnect() {
+    private boolean checkToDisconnect() {
         if (guildAudioManager.getMusicPlayer().getPlayingTrack() == null &&
             guildAudioManager.getSfxPlayer().getPlayingTrack() == null) {
             logger.info("No tracks are playing. Disconnecting from the voice channel.");
             guild.getAudioManager().closeAudioConnection();
+            return true;
         }
+        return false;
     }
 
     @Override
