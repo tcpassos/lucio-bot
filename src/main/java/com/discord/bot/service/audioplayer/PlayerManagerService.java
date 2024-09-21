@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 @Service
 public class PlayerManagerService {
@@ -184,6 +188,21 @@ public class PlayerManagerService {
                 logger.error("Failed to load sound from path: {}. Reason: {}", reference, exception.getMessage());
             }
         });
+    }
+
+    public void loadAndPlaySfx(@NonNull Member member, @NonNull String reference) {
+        Guild guild = member.getGuild();
+        GuildVoiceState memberVoiceState = member.getVoiceState();
+
+        if (memberVoiceState == null || !memberVoiceState.inAudioChannel()) {
+            return;
+        }
+
+        AudioManager audioManager = guild.getAudioManager();
+        audioManager.openAudioConnection(memberVoiceState.getChannel());
+        audioManager.setSendingHandler(getAudioManager(guild).getSendHandler());
+
+        loadAndPlaySfx(guild, reference);
     }
 
     private void saveTrack(AudioTrack track, String title) {
