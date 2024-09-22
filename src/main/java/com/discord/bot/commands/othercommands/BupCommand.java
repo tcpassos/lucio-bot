@@ -6,6 +6,7 @@ import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
+import com.discord.bot.service.audioplayer.SfxService;
 
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -16,6 +17,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 public class BupCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
     MessageService messageService;
+    SfxService sfxService;
     MusicCommandUtils utils;
 
     @Override
@@ -31,8 +33,7 @@ public class BupCommand implements ISlashCommand {
             return;
         }
 
-        String soundFile = this.getClass().getClassLoader().getResource("sounds/bup.ogg").getFile();
-        playerManagerService.loadAndPlaySfx(memberToBup, soundFile);
+        playerManagerService.loadAndPlaySfx(memberToBup, sfxService.getSound("bup.ogg"));
 
         event.reply("Bup!").queue();
     }

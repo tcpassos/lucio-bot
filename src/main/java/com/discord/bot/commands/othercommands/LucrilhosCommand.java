@@ -3,6 +3,7 @@ package com.discord.bot.commands.othercommands;
 import com.discord.bot.audioplayer.GuildAudioManager;
 import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
+import com.discord.bot.service.audioplayer.SfxService;
 
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.entities.Guild;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.managers.AudioManager;
 @AllArgsConstructor
 public class LucrilhosCommand implements ISlashCommand {
     PlayerManagerService playerManagerService;
+    SfxService sfxService;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
@@ -39,8 +41,7 @@ public class LucrilhosCommand implements ISlashCommand {
         GuildAudioManager musicManager = playerManagerService.getAudioManager(guild);
         audioManager.setSendingHandler(musicManager.getSendHandler());
 
-        String soundFile = this.getClass().getClassLoader().getResource("sounds/lucrilhos.ogg").getFile();
-        playerManagerService.loadAndPlaySfx(guild, soundFile);
+        playerManagerService.loadAndPlaySfx(guild, sfxService.getSound("bup.ogg"));
 
         event.reply("Isso é falta de lu-cri-lhos!").queue();
     }

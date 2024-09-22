@@ -78,7 +78,7 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("volume", new VolumeCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());
         // Other commands
-        commandsMap.put("lucrilhos", new LucrilhosCommand(playerManagerService));
-        commandsMap.put("bup", new BupCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("lucrilhos", new LucrilhosCommand(playerManagerService, sfxService));
+        commandsMap.put("bup", new BupCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
     }
 }

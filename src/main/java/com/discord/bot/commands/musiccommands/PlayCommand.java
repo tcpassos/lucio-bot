@@ -75,7 +75,7 @@ public class PlayCommand implements ISlashCommand {
                     botChannel = userChannel;
                     
                     // Play a sound when the track starts playing
-                    playerManagerService.loadAndPlaySfx(event.getMember(), sfxService.getRandomSound(SfxType.MUSIC_START));
+                    playerManagerService.loadAndPlaySfx(event.getMember(), sfxService.getSoundFor(SfxType.MUSIC_START));
                 }
                 if (botChannel.equals(userChannel)) {
                     if (trackSize == 1) playerManagerService.loadAndPlay(event, multipleMusicDto.getMusicDtoList()

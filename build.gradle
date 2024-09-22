@@ -41,6 +41,11 @@ dependencies {
     implementation 'net.dv8tion:JDA:5.1.0'
 }
 
+bootJar {
+    archiveFileName = 'lucio-bot.jar' 
+    mainClass = 'com.discord.bot.BotApplication'
+}
+
 test {
     useJUnitPlatform()
 }
