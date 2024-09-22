@@ -19,6 +19,7 @@ import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
 import com.discord.bot.service.SpotifyTokenService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
+import com.discord.bot.service.audioplayer.SfxService;
 
 import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.JDA;
@@ -35,6 +36,7 @@ public class LucioBot {
     final MusicCommandUtils musicCommandUtils;
     final SpotifyTokenService spotifyTokenService;
     final MessageService messageService;
+    final SfxService sfxService;
 
     @Value("${discord.bot.token}")
     private String discordToken;
@@ -50,12 +52,13 @@ public class LucioBot {
 
     public LucioBot(RestService restService, PlayerManagerService playerManagerService,
                     MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
-                    MessageService messageService) {
+                    MessageService messageService, SfxService sfxService) {
         this.restService = restService;
         this.playerManagerService = playerManagerService;
         this.musicCommandUtils = musicCommandUtils;
         this.spotifyTokenService = spotifyTokenService;
         this.messageService = messageService;
+        this.sfxService = sfxService;
     }
 
     @PostConstruct
@@ -64,12 +67,13 @@ public class LucioBot {
         if (StringUtils.hasText(botLanguage)) {
             Locale locale = Locale.forLanguageTag(botLanguage);
             messageService.changeLanguage(locale);
+            sfxService.setLocale(locale);
         }
 
         JDA jda = JDABuilder.createDefault(discordToken)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MESSAGES)
                 .addEventListeners(
-                    new CommandManager(restService, playerManagerService, messageService, musicCommandUtils, adminUserId),
+                    new CommandManager(restService, playerManagerService, messageService, sfxService, musicCommandUtils, adminUserId),
                     new ActivityListener(messageService)
                 )
                 .setActivity(Activity.listening("Não para, não para, não para não!"))
