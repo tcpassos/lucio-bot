@@ -29,10 +29,9 @@ public class SfxService {
         this.locale = newLocale;
     }
 
-    public String getSoundFor(SfxType sfxType) {
-        String languageFolder = locale.getLanguage();
+    public String getSound(SfxType sfxType) {
         String sound = sfxType.getSfxList().get((int) (Math.random() * sfxType.getSfxList().size()));
-        return getSound(languageFolder + "/" + sound);
+        return getSound(sound);
     }
 
     public String getSound(String soundFile) {
@@ -41,9 +40,10 @@ public class SfxService {
         }
         
         String languageFolder = locale.getLanguage();
-        InputStream soundStream = getClass().getClassLoader().getResourceAsStream("sounds/" + languageFolder + "/" + soundFile);
+        String soundPath = "sounds/" + languageFolder + "/" + soundFile;
+        InputStream soundStream = getClass().getClassLoader().getResourceAsStream(soundPath);
         if (soundStream == null) {
-            throw new RuntimeException("Sound file not found: " + soundFile);
+            throw new RuntimeException("Sound file not found: " + soundPath);
         }
 
         try {

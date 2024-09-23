@@ -26,6 +26,8 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 @Configuration
 @EnableScheduling
@@ -46,6 +48,9 @@ public class LucioBot {
 
     @Value("${discord.admin.user.id}")
     private String adminUserId;
+
+    @Value("${discord.channels.game.id}")
+    private String gameChannelId;
 
     @Value("${discord.bot.language}")
     private String botLanguage;
@@ -72,9 +77,11 @@ public class LucioBot {
 
         JDA jda = JDABuilder.createDefault(discordToken)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MESSAGES)
+                .enableCache(CacheFlag.ACTIVITY)
+                .setChunkingFilter(ChunkingFilter.ALL)
                 .addEventListeners(
                     new CommandManager(restService, playerManagerService, messageService, sfxService, musicCommandUtils, adminUserId),
-                    new ActivityListener(messageService)
+                    new ActivityListener(messageService, gameChannelId)
                 )
                 .setActivity(Activity.listening("Não para, não para, não para não!"))
                 .build();

@@ -55,10 +55,12 @@ public class TrackScheduler extends AudioEventAdapter {
     public void nextTrack() {
         this.player.startTrack(this.queue.poll(), false);
         if (!checkToDisconnect()) {
-            this.guild.getJDA().getPresence().setActivity(Activity.listening(this.player.getPlayingTrack().getInfo().title));
-        } else {
-            this.guild.getJDA().getPresence().setActivity(null);
+            if (this.player.getPlayingTrack() != null) {
+                this.guild.getJDA().getPresence().setActivity(Activity.listening(this.player.getPlayingTrack().getInfo().title));
+                return;
+            }
         }
+        this.guild.getJDA().getPresence().setActivity(null);
     }
 
     private boolean checkToDisconnect() {
