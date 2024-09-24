@@ -53,8 +53,8 @@ public class PlayerManagerService {
 
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
-        yt.useOauth2(refreshToken, true);
-        // yt.useOauth2(null, false);
+        // yt.useOauth2(refreshToken, true);
+        yt.useOauth2(null, false);
         this.audioPlayerManager.registerSourceManager(yt);
 
         this.audioPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);

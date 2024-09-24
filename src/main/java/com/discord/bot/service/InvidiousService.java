@@ -16,8 +16,8 @@ public class InvidiousService {
     private final static Logger logger = LoggerFactory.getLogger(InvidiousService.class);
     private final RestTemplate restTemplate;
     private final List<String> mirrors = Arrays.asList(
+        "https://inv.nadeko.net",
             "https://invidious.nerdvpn.de",
-            "https://inv.nadeko.net",
             "https://invidious.privacyredirect.com",
             "https://invidious.jing.rocks"
     );
