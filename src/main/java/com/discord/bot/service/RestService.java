@@ -55,8 +55,9 @@ public class RestService {
                 String musicName = trackDtoList.getArtistDtoList().get(0).getName() + " - " + trackDtoList.getName();
                 musicDtos.add(new MusicDto(musicName, null));
             }
-        } else if (spotifyUrl.contains("https://open.spotify.com/track/")) {
-            id = spotifyUrl.substring(31, 53);
+        } else if (spotifyUrl.matches("https://open\\.spotify\\.com.*/track/.*")) {
+            int idIndex = spotifyUrl.indexOf("track/") + 6;
+            id = spotifyUrl.substring(idIndex, idIndex + 22);
             spotifyUrl = "https://api.spotify.com/v1/tracks/" + id;
             SpotifyTrackResponse spotifyTrackResponse = getSpotifyTrackData(spotifyUrl);
             String musicName = spotifyTrackResponse.getArtistDtoList().get(0).getName() +
