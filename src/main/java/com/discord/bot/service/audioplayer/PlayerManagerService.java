@@ -88,7 +88,8 @@ public class PlayerManagerService {
                 String trackUrl = track.getInfo().uri;
 
                 embedBuilder.setDescription(messageService.getMessage("bot.queue.added.song", "[" + track.getInfo().title + "](" + trackUrl + ")", musicManager.musicScheduler.queue.size() + 1))
-                            .setColor(Color.GREEN);
+                            .setColor(Color.GREEN)
+                            .setThumbnail(track.getInfo().artworkUrl);
                 event.getHook().sendMessageEmbeds(embedBuilder.build())
                         .setEphemeral(false)
                         .queue();
