@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
@@ -42,12 +44,17 @@ public class PlayerManagerService {
     final MusicRepository musicRepository;
     final MessageService messageService;
 
+    @Value("${youtube.api.refresh-token}")
+    private String refreshToken;
+
     public PlayerManagerService(MusicRepository musicRepository, MessageService messageService) {
         this.musicManagers = new HashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
 
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
+        // yt.useOauth2(refreshToken, true);
+        // yt.useOauth2(null, false);
         this.audioPlayerManager.registerSourceManager(yt);
 
         this.audioPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
@@ -200,11 +207,15 @@ public class PlayerManagerService {
             return;
         }
 
-        AudioManager audioManager = guild.getAudioManager();
-        audioManager.openAudioConnection(memberVoiceState.getChannel());
-        audioManager.setSendingHandler(getAudioManager(guild).getSendHandler());
-
+        joinVoiceChannel(memberVoiceState.getChannel());
         loadAndPlaySfx(guild, reference);
+    }
+
+    private void joinVoiceChannel(AudioChannel audioChannel) {
+        Guild guild = audioChannel.getGuild();
+        AudioManager audioManager = guild.getAudioManager();
+        audioManager.openAudioConnection(audioChannel);
+        audioManager.setSendingHandler(getAudioManager(guild).getSendHandler());
     }
 
     private void saveTrack(AudioTrack track, String title) {

@@ -1,45 +1,47 @@
 package com.discord.bot.service;
 
-import com.discord.bot.dto.response.spotify.SpotifyItemDto;
-import com.discord.bot.dto.response.spotify.SpotifyPlaylistResponse;
-import com.discord.bot.dto.response.spotify.SpotifyTrackResponse;
-import com.discord.bot.dto.response.spotify.TrackDto;
-import com.discord.bot.dto.response.youtube.YoutubeResponse;
-import com.discord.bot.repository.MusicRepository;
-import com.discord.bot.dto.MultipleMusicDto;
-import com.discord.bot.dto.MusicDto;
-import com.discord.bot.entity.Music;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.discord.bot.dto.MultipleMusicDto;
+import com.discord.bot.dto.MusicDto;
+import com.discord.bot.dto.response.spotify.SpotifyItemDto;
+import com.discord.bot.dto.response.spotify.SpotifyPlaylistResponse;
+import com.discord.bot.dto.response.spotify.SpotifyTrackResponse;
+import com.discord.bot.dto.response.spotify.TrackDto;
+import com.discord.bot.entity.Music;
+import com.discord.bot.repository.MusicRepository;
+
 @Service
 public class RestService {
     public static String spotifyToken;
+
+    private final MusicRepository musicRepository;
+    private final InvidiousService invidiousService;
+    private final YouTubeApiService youTubeApiService;
     private final RestTemplate restTemplate;
-    final MusicRepository musicRepository;
 
     @Value("${youtube.api.key}")
     private String youtubeApiKey;
 
-    public RestService(MusicRepository musicRepository) {
-        this.restTemplate = new RestTemplateBuilder().build();
+    public RestService(MusicRepository musicRepository, InvidiousService invidiousService, YouTubeApiService youTubeApiService) {
         this.musicRepository = musicRepository;
+        this.invidiousService = invidiousService;
+        this.youTubeApiService = youTubeApiService;
+        this.restTemplate = new RestTemplateBuilder().build();
     }
 
     public List<MusicDto> getTracksFromSpotify(String spotifyUrl) {
@@ -79,11 +81,22 @@ public class RestService {
             musicDto.setReference(music.getReference());
             count++;
         } else {
-            try {
-                var youtubeUri = getYoutubeApiUri(musicDto.getTitle());
-                setYoutubeVideoUrl(youtubeUri, musicDto);
+            String videoId = invidiousService.searchVideoId(musicDto.getTitle());
+            if (videoId == null) {
+                videoId = youTubeApiService.searchVideoId(musicDto.getTitle());
+            }
+
+            if (videoId != null) {
+                String youtubeUrl = "https://www.youtube.com/watch?v=" + videoId;
+                musicDto.setReference(youtubeUrl);
+
+                Music newMusic = new Music();
+                newMusic.setTitle(musicDto.getTitle());
+                newMusic.setReference(youtubeUrl);
+                musicRepository.save(newMusic);
+
                 count++;
-            } catch (HttpClientErrorException.Forbidden e) {
+            } else {
                 failCount++;
             }
         }
@@ -102,23 +115,28 @@ public class RestService {
                 musicDto.setReference(music.getReference());
                 count.incrementAndGet();
             } else {
-                try {
-                    var youtubeApiUri = getYoutubeApiUri(musicDto.getTitle());
-                    setYoutubeVideoUrl(youtubeApiUri, musicDto);
+                String videoId = invidiousService.searchVideoId(musicDto.getTitle());
+                if (videoId == null) {
+                    videoId = youTubeApiService.searchVideoId(musicDto.getTitle());
+                }
+
+                if (videoId != null) {
+                    String youtubeUrl = "https://www.youtube.com/watch?v=" + videoId;
+                    musicDto.setReference(youtubeUrl);
+
+                    Music newMusic = new Music();
+                    newMusic.setTitle(musicDto.getTitle());
+                    newMusic.setReference(youtubeUrl);
+                    musicRepository.save(newMusic);
+
                     count.incrementAndGet();
-                } catch (HttpClientErrorException.Forbidden e) {
+                } else {
                     failCount.incrementAndGet();
                 }
             }
         }).collect(Collectors.toList());
 
         return new MultipleMusicDto(count.get(), updatedMusicDtos, failCount.get());
-    }
-
-    private void setYoutubeVideoUrl(URI youtubeUri, MusicDto musicDto) {
-        YoutubeResponse youtubeResponse = restTemplate.getForObject(youtubeUri, YoutubeResponse.class);
-        assert youtubeResponse != null;
-        musicDto.setReference("https://www.youtube.com/watch?v=" + youtubeResponse.getItems().get(0).getId().getVideoId());
     }
 
     private SpotifyPlaylistResponse getSpotifyPlaylistData(String spotifyUrl) {
@@ -135,17 +153,6 @@ public class RestService {
         headers.setBearerAuth(spotifyToken);
         HttpEntity<String> entity = new HttpEntity<>(headers);
         return restTemplate.exchange(spotifyUri, HttpMethod.GET, entity, SpotifyTrackResponse.class).getBody();
-    }
-
-    private URI getYoutubeApiUri(String songTitle) {
-        String encodedMusicName = URLEncoder.encode(songTitle, StandardCharsets.UTF_8);
-        String youtubeUrl = "https://youtube.googleapis.com/youtube/v3/search?fields=items(id(videoId))" +
-                "&maxResults=1&q=" +
-                encodedMusicName +
-                "&key=" +
-                youtubeApiKey;
-
-        return createUri(youtubeUrl);
     }
 
     private URI createUri(String url) {
