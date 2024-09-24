@@ -1,1 +1,1 @@
-CREATE DATABASE music_bot;
+CREATE DATABASE lucio_bot;

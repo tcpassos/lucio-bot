@@ -84,6 +84,8 @@ public class JdaCommands {
                 Commands.slash("mhelp", messageService.getMessage("command.mhelp.description"))
                         .addOptions(new OptionData(OptionType.BOOLEAN, "ephemeral", ephemeralString).setRequired(false))
                         .setGuildOnly(true),
+                Commands.slash("configure", messageService.getMessage("command.configure.description"))
+                        .setGuildOnly(true),
                 Commands.slash("lucrilhos", messageService.getMessage("command.lucrilhos.description"))
                         .setGuildOnly(true),
                 Commands.slash("bup", messageService.getMessage("command.bup.description"))

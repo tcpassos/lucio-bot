@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -33,9 +32,6 @@ public class RestService {
     private final InvidiousService invidiousService;
     private final YouTubeApiService youTubeApiService;
     private final RestTemplate restTemplate;
-
-    @Value("${youtube.api.key}")
-    private String youtubeApiKey;
 
     public RestService(MusicRepository musicRepository, InvidiousService invidiousService, YouTubeApiService youTubeApiService) {
         this.musicRepository = musicRepository;
@@ -71,7 +67,7 @@ public class RestService {
         return musicDtos;
     }
 
-    public MultipleMusicDto getYoutubeUrl(MusicDto musicDto) {
+    public MultipleMusicDto getYoutubeUrl(MusicDto musicDto, Long guildId) {
         int count = 0;
         int failCount = 0;
 
@@ -83,7 +79,7 @@ public class RestService {
         } else {
             String videoId = invidiousService.searchVideoId(musicDto.getTitle());
             if (videoId == null) {
-                videoId = youTubeApiService.searchVideoId(musicDto.getTitle());
+                videoId = youTubeApiService.searchVideoId(musicDto.getTitle(), guildId);
             }
 
             if (videoId != null) {
@@ -104,7 +100,7 @@ public class RestService {
         return new MultipleMusicDto(count, Collections.singletonList(musicDto), failCount);
     }
 
-    public MultipleMusicDto getYoutubeUrl(List<MusicDto> musicDtos) {
+    public MultipleMusicDto getYoutubeUrl(List<MusicDto> musicDtos, Long guildId) {
         AtomicInteger count = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
 
@@ -117,7 +113,7 @@ public class RestService {
             } else {
                 String videoId = invidiousService.searchVideoId(musicDto.getTitle());
                 if (videoId == null) {
-                    videoId = youTubeApiService.searchVideoId(musicDto.getTitle());
+                    videoId = youTubeApiService.searchVideoId(musicDto.getTitle(), guildId);
                 }
 
                 if (videoId != null) {

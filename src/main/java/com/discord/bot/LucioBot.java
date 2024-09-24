@@ -10,10 +10,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
-import com.discord.bot.activity.ActivityListener;
 import com.discord.bot.commands.AdminCommands;
 import com.discord.bot.commands.CommandManager;
 import com.discord.bot.commands.JdaCommands;
+import com.discord.bot.listeners.ActivityListener;
+import com.discord.bot.listeners.EntitySelectInteractionListener;
+import com.discord.bot.listeners.ModalInteractionListener;
+import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
@@ -39,6 +42,7 @@ public class LucioBot {
     final SpotifyTokenService spotifyTokenService;
     final MessageService messageService;
     final SfxService sfxService;
+    final GuildConfigRepository guildConfigRepository;
 
     @Value("${discord.bot.token}")
     private String discordToken;
@@ -49,21 +53,20 @@ public class LucioBot {
     @Value("${discord.admin.user.id}")
     private String adminUserId;
 
-    @Value("${discord.channels.game.id}")
-    private String gameChannelId;
-
     @Value("${discord.bot.language}")
     private String botLanguage;
 
     public LucioBot(RestService restService, PlayerManagerService playerManagerService,
                     MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
-                    MessageService messageService, SfxService sfxService) {
+                    MessageService messageService, SfxService sfxService,
+                    GuildConfigRepository guildConfigRepository) {
         this.restService = restService;
         this.playerManagerService = playerManagerService;
         this.musicCommandUtils = musicCommandUtils;
         this.spotifyTokenService = spotifyTokenService;
         this.messageService = messageService;
         this.sfxService = sfxService;
+        this.guildConfigRepository = guildConfigRepository;
     }
 
     @PostConstruct
@@ -80,8 +83,10 @@ public class LucioBot {
                 .enableCache(CacheFlag.ACTIVITY)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .addEventListeners(
-                    new CommandManager(restService, playerManagerService, messageService, sfxService, musicCommandUtils, adminUserId),
-                    new ActivityListener(messageService, gameChannelId)
+                    new CommandManager(restService, playerManagerService, messageService, sfxService, musicCommandUtils, guildConfigRepository, adminUserId),
+                    new ActivityListener(messageService, guildConfigRepository),
+                    new ModalInteractionListener(messageService, guildConfigRepository),
+                    new EntitySelectInteractionListener(messageService, guildConfigRepository)
                 )
                 .setActivity(Activity.listening("Não para, não para, não para não!"))
                 .build();

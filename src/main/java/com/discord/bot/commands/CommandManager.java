@@ -4,7 +4,9 @@ import com.discord.bot.commands.admincommands.GuildsCommand;
 import com.discord.bot.commands.admincommands.LogsCommand;
 import com.discord.bot.commands.musiccommands.*;
 import com.discord.bot.commands.othercommands.BupCommand;
+import com.discord.bot.commands.othercommands.ConfigureCommand;
 import com.discord.bot.commands.othercommands.LucrilhosCommand;
+import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.RestService;
@@ -25,17 +27,20 @@ public class CommandManager extends ListenerAdapter {
     final MessageService messageService;
     final SfxService sfxService;
     final MusicCommandUtils musicCommandUtils;
+    final GuildConfigRepository guildConfigRepository;
     private final String adminUserId;
     private Map<String, ISlashCommand> commandsMap;
 
     public CommandManager(RestService restService, PlayerManagerService playerManagerService,
                           MessageService messageService, SfxService sfxService,
-                          MusicCommandUtils musicCommandUtils, String adminUserId) {
+                          MusicCommandUtils musicCommandUtils, GuildConfigRepository guildConfigRepository,
+                          String adminUserId) {
         this.restService = restService;
         this.playerManagerService = playerManagerService;
         this.messageService = messageService;
         this.sfxService = sfxService;
         this.musicCommandUtils = musicCommandUtils;
+        this.guildConfigRepository = guildConfigRepository;
         this.adminUserId = adminUserId;
         commandMapper();
     }
@@ -78,6 +83,7 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("volume", new VolumeCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());
         // Other commands
+        commandsMap.put("configure", new ConfigureCommand(messageService, guildConfigRepository));
         commandsMap.put("lucrilhos", new LucrilhosCommand(playerManagerService, sfxService));
         commandsMap.put("bup", new BupCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
     }

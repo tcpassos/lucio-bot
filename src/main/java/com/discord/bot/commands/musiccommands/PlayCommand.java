@@ -37,10 +37,10 @@ public class PlayCommand implements ISlashCommand {
 
         assert queryOption != null;
         String query = queryOption.getAsString().trim();
-        MultipleMusicDto multipleMusicDto = getSongUrl(query);
+        MultipleMusicDto multipleMusicDto = getSongUrl(query, event.getGuild().getIdLong());
         if (multipleMusicDto.getCount() == 0) {
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                            .setDescription(messageService.getMessage("youtube.api.limit"))
+                            .setDescription(messageService.getMessage("api.youtube.limit"))
                             .setColor(Color.RED)
                             .build())
                     .setEphemeral(true)
@@ -107,7 +107,7 @@ public class PlayCommand implements ISlashCommand {
         return audioChannel;
     }
 
-    private MultipleMusicDto getSongUrl(String query) {
+    private MultipleMusicDto getSongUrl(String query, Long guildId) {
         List<MusicDto> musicDtos = new ArrayList<>();
         if (query.contains("https://www.youtube.com/shorts/")) query = youtubeShortsToVideo(query);
         if (isSupportedUrl(query)) {
@@ -115,9 +115,9 @@ public class PlayCommand implements ISlashCommand {
             return new MultipleMusicDto(1, musicDtos, 0);
         } else if (query.contains("https://open.spotify.com/")) {
             musicDtos = restService.getTracksFromSpotify(query);
-            return restService.getYoutubeUrl(musicDtos);
+            return restService.getYoutubeUrl(musicDtos, guildId);
         } else {
-            return restService.getYoutubeUrl(new MusicDto(query, null));
+            return restService.getYoutubeUrl(new MusicDto(query, null), guildId);
         }
     }
 

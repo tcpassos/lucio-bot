@@ -1,8 +1,8 @@
 spring:
   datasource:
+    url: jdbc:postgresql://postgres:5432/lucio_bot
     username: postgres
     password: postgres
-    url: jdbc:postgresql://localhost:5432/music_bot
   main:
     web-application-type: none
   jpa:
@@ -13,20 +13,20 @@ logging:
   level:
     root: info
 
-# noinspection SpringBootApplicationYaml
 discord:
   bot:
-    token:
+    token: ${DISCORD_BOT_TOKEN}
+    language: ${DISCORD_BOT_LANGUAGE:pt-BR}
   admin:
     server:
-      id: your_admin_server
+      id: 1285780760439033897
     user:
-      id: your_id
-# noinspection SpringBootApplicationYaml
+      id: 440942191800745984
+
 youtube:
   api:
-    key:
+    refresh-token: ${YOUTUBE_API_REFRESH_TOKEN}
 spotify:
   client:
-    secret:
-    id:
+    secret: ${SPOTIFY_CLIENT_SECRET}
+    id: ${SPOTIFY_CLIENT_ID}

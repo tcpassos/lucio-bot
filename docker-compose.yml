@@ -1,17 +1,46 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lucio_bot
     volumes:
-      - postgres:/data/postgres
+      - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lucio_bot
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      DISCORD_BOT_LANGUAGE: pt-BR
+      YOUTUBE_API_REFRESH_TOKEN: ${YOUTUBE_API_REFRESH_TOKEN}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+    volumes:
+      - gradle_cache:/home/gradle/.gradle
+    networks:
+      - app-network
     restart: unless-stopped
 
 volumes:
-  postgres:
+  postgres_data:
+  gradle_cache:
+
+networks:
+  app-network:
+    driver: bridge
