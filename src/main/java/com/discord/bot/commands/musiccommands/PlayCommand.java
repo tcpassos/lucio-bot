@@ -33,7 +33,7 @@ public class PlayCommand implements ISlashCommand {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         var queryOption = event.getOption("query");
-        event.deferReply(true).queue();
+        event.deferReply().queue();
 
         assert queryOption != null;
         String query = queryOption.getAsString().trim();
@@ -78,9 +78,8 @@ public class PlayCommand implements ISlashCommand {
                     playerManagerService.loadAndPlaySfx(event.getMember(), sfxService.getSound(SfxType.MUSIC_START));
                 }
                 if (botChannel.equals(userChannel)) {
-                    if (trackSize == 1) playerManagerService.loadAndPlay(event, multipleMusicDto.getMusicDtoList()
-                            .get(0), false);
-                    else playerManagerService.loadMultipleAndPlay(event, multipleMusicDto, false);
+                    if (trackSize == 1) playerManagerService.loadAndPlay(event, multipleMusicDto.getMusicDtoList().get(0));
+                    else playerManagerService.loadMultipleAndPlay(event, multipleMusicDto);
                 } else
                     embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
             } else embedBuilder.setDescription(messageService.getMessage("bot.notrackfound")).setColor(Color.RED);

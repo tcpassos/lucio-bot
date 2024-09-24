@@ -41,8 +41,8 @@ public class PlayerManagerService {
     private final static Logger logger = LoggerFactory.getLogger(PlayerManagerService.class);
     private final Map<Long, GuildAudioManager> musicManagers;
     private final AudioPlayerManager audioPlayerManager;
-    final MusicRepository musicRepository;
-    final MessageService messageService;
+    private final MusicRepository musicRepository;
+    private final MessageService messageService;
 
     @Value("${youtube.api.refresh-token}")
     private String refreshToken;
@@ -79,17 +79,18 @@ public class PlayerManagerService {
         return null;
     }
 
-    public void loadAndPlay(SlashCommandInteractionEvent event, MusicDto musicDto, boolean ephemeral) {
+    public void loadAndPlay(SlashCommandInteractionEvent event, MusicDto musicDto) {
         final GuildAudioManager musicManager = this.getAudioManager(event.getGuild());
         EmbedBuilder embedBuilder = new EmbedBuilder();
         this.audioPlayerManager.loadItemOrdered(musicManager, musicDto.getReference(), new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                event.getHook().sendMessageEmbeds(embedBuilder
-                                .setDescription(messageService.getMessage("bot.queue.added.song", track.getInfo().title, musicManager.musicScheduler.queue.size() + 1))
-                                .setColor(Color.GREEN)
-                                .build())
-                        .setEphemeral(ephemeral)
+                String trackUrl = track.getInfo().uri;
+
+                embedBuilder.setDescription(messageService.getMessage("bot.queue.added.song", "[" + track.getInfo().title + "](" + trackUrl + ")", musicManager.musicScheduler.queue.size() + 1))
+                            .setColor(Color.GREEN);
+                event.getHook().sendMessageEmbeds(embedBuilder.build())
+                        .setEphemeral(false)
                         .queue();
 
                 musicManager.musicScheduler.queue(track);
@@ -107,24 +108,34 @@ public class PlayerManagerService {
                                 .setDescription(messageService.getMessage("bot.queue.added.playlist", tracks.size()))
                                 .setColor(Color.GREEN)
                                 .build())
-                        .setEphemeral(ephemeral)
+                        .setEphemeral(false)
                         .queue();
             }
 
             @Override
             public void noMatches() {
-                logger.warn("No match is found.");
+                logger.warn("No match is found for: {}", musicDto.getReference());
+                embedBuilder.setDescription(messageService.getMessage("bot.song.nomatches"))
+                            .setColor(Color.RED);
+                event.getHook().sendMessageEmbeds(embedBuilder.build())
+                        .setEphemeral(true)
+                        .queue();
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
                 logger.error("Track load failed.", exception);
+                embedBuilder.setDescription(messageService.getMessage("bot.song.loadfailed", exception.getMessage()))
+                            .setColor(Color.RED);
+                event.getHook().sendMessageEmbeds(embedBuilder.build())
+                        .setEphemeral(true)
+                        .queue();
             }
         });
     }
 
     @Async
-    public void loadMultipleAndPlay(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto, boolean ephemeral) {
+    public void loadMultipleAndPlay(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto) {
         final GuildAudioManager audioManager = this.getAudioManager(event.getGuild());
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
@@ -136,14 +147,14 @@ public class PlayerManagerService {
                                     " please use youtube urls to play songs afterwards for today.")
                             .setColor(Color.ORANGE)
                             .build())
-                    .setEphemeral(ephemeral)
+                    .setEphemeral(true)
                     .queue();
         } else {
             event.getHook().sendMessageEmbeds(new EmbedBuilder()
                             .setDescription(multipleMusicDto.getCount() + " tracks read and will be queued soon.")
                             .setColor(Color.GREEN)
                             .build())
-                    .setEphemeral(ephemeral)
+                    .setEphemeral(true)
                     .queue();
         }
 
@@ -175,7 +186,7 @@ public class PlayerManagerService {
 
     public void loadAndPlaySfx(Guild guild, String reference) {
         GuildAudioManager guildAudioManager = getAudioManager(guild);
-    
+
         audioPlayerManager.loadItem(reference, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
