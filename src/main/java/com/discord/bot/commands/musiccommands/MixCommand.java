@@ -32,6 +32,7 @@ public class MixCommand implements ISlashCommand {
         var command = event.getSubcommandName();
         var amountOption = event.getOption("amount");
         int amount = amountOption != null ? amountOption.getAsInt() : 5;
+        event.deferReply().queue();
 
         List<MusicDto> recommendations = switch (command) {
             case "artists" -> getRecommendationsForArtists(event, amount);
@@ -48,7 +49,6 @@ public class MixCommand implements ISlashCommand {
             return;
         }
 
-        event.deferReply().queue();
         musicService.playMusic(event, songs);
     }
 
