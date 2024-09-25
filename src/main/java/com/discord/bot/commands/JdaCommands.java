@@ -95,11 +95,11 @@ public class JdaCommands {
                                 .addOption(OptionType.STRING, "artist5", messageService.getMessage("command.mix.param.artist"), false)
                                 .addOption(OptionType.INTEGER, "amount", messageService.getMessage("command.mix.param.amount"), false),
                         new SubcommandData("genres", messageService.getMessage("command.mix.subcommand.genres"))
-                                .addOption(OptionType.STRING, "genre1", messageService.getMessage("command.mix.param.genre"), true)
-                                .addOption(OptionType.STRING, "genre2", messageService.getMessage("command.mix.param.genre"), false)
-                                .addOption(OptionType.STRING, "genre3", messageService.getMessage("command.mix.param.genre"), false)
-                                .addOption(OptionType.STRING, "genre4", messageService.getMessage("command.mix.param.genre"), false)
-                                .addOption(OptionType.STRING, "genre5", messageService.getMessage("command.mix.param.genre"), false)
+                                .addOption(OptionType.STRING, "genre1", messageService.getMessage("command.mix.param.genre"), true, true)
+                                .addOption(OptionType.STRING, "genre2", messageService.getMessage("command.mix.param.genre"), false, true)
+                                .addOption(OptionType.STRING, "genre3", messageService.getMessage("command.mix.param.genre"), false, true)
+                                .addOption(OptionType.STRING, "genre4", messageService.getMessage("command.mix.param.genre"), false, true)
+                                .addOption(OptionType.STRING, "genre5", messageService.getMessage("command.mix.param.genre"), false, true)
                                 .addOption(OptionType.INTEGER, "amount", messageService.getMessage("command.mix.param.amount"), false),
                         new SubcommandData("tracks", messageService.getMessage("command.mix.subcommand.tracks"))
                                 .addOption(OptionType.STRING, "track1", messageService.getMessage("command.mix.param.track"), true)
