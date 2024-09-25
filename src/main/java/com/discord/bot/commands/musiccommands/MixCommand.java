@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.discord.bot.commands.ISlashCommand;
+import com.discord.bot.dto.MusicDto;
 import com.discord.bot.dto.response.spotify.ArtistDto;
 import com.discord.bot.dto.response.spotify.TrackDto;
 import com.discord.bot.service.MessageService;
@@ -28,61 +29,17 @@ public class MixCommand implements ISlashCommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
+        var command = event.getSubcommandName();
         var amountOption = event.getOption("amount");
         int amount = amountOption != null ? amountOption.getAsInt() : 5;
-        var artist1Option = event.getOption("artist1");
-        var artist2Option = event.getOption("artist2");
-        var artist3Option = event.getOption("artist3");
-        var artist4Option = event.getOption("artist4");
-        var artist5Option = event.getOption("artist5");
-        var genre1Option = event.getOption("genre1");
-        var genre2Option = event.getOption("genre2");
-        var genre3Option = event.getOption("genre3");
-        var genre4Option = event.getOption("genre4");
-        var genre5Option = event.getOption("genre5");
-        var track1Option = event.getOption("track1");
-        var track2Option = event.getOption("track2");
-        var track3Option = event.getOption("track3");
-        var track4Option = event.getOption("track4");
-        var track5Option = event.getOption("track5");
+
+        List<MusicDto> recommendations = switch (command) {
+            case "artists" -> getRecommendationsForArtists(event, amount);
+            case "genres" -> getRecommendationsForGenres(event, amount);
+            case "tracks" -> getRecommendationsForTracks(event, amount);
+            default -> new ArrayList<>();
+        };
         
-        List<String> artists = new ArrayList<>();
-        List<String> genres = new ArrayList<>();
-        List<String> tracks = new ArrayList<>();
-
-        if (artist1Option != null) artists.add(artist1Option.getAsString().trim());
-        if (artist2Option != null) artists.add(artist2Option.getAsString().trim());
-        if (artist3Option != null) artists.add(artist3Option.getAsString().trim());
-        if (artist4Option != null) artists.add(artist4Option.getAsString().trim());
-        if (artist5Option != null) artists.add(artist5Option.getAsString().trim());
-
-        if (genre1Option != null) genres.add(genre1Option.getAsString().trim());
-        if (genre2Option != null) genres.add(genre2Option.getAsString().trim());
-        if (genre3Option != null) genres.add(genre3Option.getAsString().trim());
-        if (genre4Option != null) genres.add(genre4Option.getAsString().trim());
-        if (genre5Option != null) genres.add(genre5Option.getAsString().trim());
-
-        if (track1Option != null) tracks.add(track1Option.getAsString().trim());
-        if (track2Option != null) tracks.add(track2Option.getAsString().trim());
-        if (track3Option != null) tracks.add(track3Option.getAsString().trim());
-        if (track4Option != null) tracks.add(track4Option.getAsString().trim());
-        if (track5Option != null) tracks.add(track5Option.getAsString().trim());
-
-        List<String> artistIds = artists.stream().map(artist -> spotifyService.searchArtist(artist))
-                                                 .filter(Optional::isPresent)
-                                                 .map(Optional::get)
-                                                 .map(ArtistDto::getId)
-                                                 .toList();
-
-        List<String> trackIds = tracks.stream().map(track -> spotifyService.searchTrack(track))
-                                               .filter(Optional::isPresent)
-                                               .map(Optional::get)
-                                               .map(TrackDto::getId)
-                                               .toList();
-
-        event.deferReply().queue();
-        
-        var recommendations = spotifyService.getRecommendations(artistIds, genres, trackIds, amount);
         var songs = restService.getYoutubeUrl(recommendations, event.getGuild().getIdLong());
         if (songs.getCount() == 0) {
             event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.song.nomatches").setColor(Color.RED).build())
@@ -91,6 +48,68 @@ public class MixCommand implements ISlashCommand {
             return;
         }
 
+        event.deferReply().queue();
         musicService.playMusic(event, songs);
+    }
+
+    private List<MusicDto> getRecommendationsForArtists(SlashCommandInteractionEvent event, int amount) {
+        List<String> artists = new ArrayList<>();
+        var artist1Option = event.getOption("artist1");
+        var artist2Option = event.getOption("artist2");
+        var artist3Option = event.getOption("artist3");
+        var artist4Option = event.getOption("artist4");
+        var artist5Option = event.getOption("artist5");
+        if (artist1Option != null) artists.add(artist1Option.getAsString().trim());
+        if (artist2Option != null) artists.add(artist2Option.getAsString().trim());
+        if (artist3Option != null) artists.add(artist3Option.getAsString().trim());
+        if (artist4Option != null) artists.add(artist4Option.getAsString().trim());
+        if (artist5Option != null) artists.add(artist5Option.getAsString().trim());
+
+        List<String> artistIds = artists.stream()
+                                        .map(artist -> spotifyService.searchArtist(artist))
+                                        .filter(Optional::isPresent)
+                                        .map(Optional::get)
+                                        .map(ArtistDto::getId)
+                                        .toList();
+
+        return spotifyService.getRecommendationsForArtists(artistIds, amount);
+    }
+
+    private List<MusicDto> getRecommendationsForGenres(SlashCommandInteractionEvent event, int amount) {
+        List<String> genres = new ArrayList<>();
+        var genre1Option = event.getOption("genre1");
+        var genre2Option = event.getOption("genre2");
+        var genre3Option = event.getOption("genre3");
+        var genre4Option = event.getOption("genre4");
+        var genre5Option = event.getOption("genre5");
+        if (genre1Option != null) genres.add(genre1Option.getAsString().trim());
+        if (genre2Option != null) genres.add(genre2Option.getAsString().trim());
+        if (genre3Option != null) genres.add(genre3Option.getAsString().trim());
+        if (genre4Option != null) genres.add(genre4Option.getAsString().trim());
+        if (genre5Option != null) genres.add(genre5Option.getAsString().trim());
+
+        return spotifyService.getRecommendationsForGenres(genres, amount);
+    }
+
+    private List<MusicDto> getRecommendationsForTracks(SlashCommandInteractionEvent event, int amount) {
+        List<String> tracks = new ArrayList<>();
+        var track1Option = event.getOption("track1");
+        var track2Option = event.getOption("track2");
+        var track3Option = event.getOption("track3");
+        var track4Option = event.getOption("track4");
+        var track5Option = event.getOption("track5");
+        if (track1Option != null) tracks.add(track1Option.getAsString().trim());
+        if (track2Option != null) tracks.add(track2Option.getAsString().trim());
+        if (track3Option != null) tracks.add(track3Option.getAsString().trim());
+        if (track4Option != null) tracks.add(track4Option.getAsString().trim());
+        if (track5Option != null) tracks.add(track5Option.getAsString().trim());
+
+        List<String> trackIds = tracks.stream().map(track -> spotifyService.searchTrack(track))
+                                               .filter(Optional::isPresent)
+                                               .map(Optional::get)
+                                               .map(TrackDto::getId)
+                                               .toList();
+
+        return spotifyService.getRecommendationsForTracks(trackIds, amount);
     }
 }

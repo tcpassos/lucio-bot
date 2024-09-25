@@ -87,15 +87,20 @@ public class SpotifyService {
 
     public List<MusicDto> getRecommendationsForArtists(List<String> artistIds, int amount) {
         Set<String> artistSet = new HashSet<>(artistIds);
-        return getRecommendations(new ArrayList<>(artistSet), null, null, amount);
+        return getRecommendations(new ArrayList<>(artistSet), SeedType.ARTIST, amount);
     }
 
     public List<MusicDto> getRecommendationsForGenres(List<String> genres, int amount) {
         Set<String> genreSet = new HashSet<>(genres);
-        return getRecommendations(null, new ArrayList<>(genreSet), null, amount);
+        return getRecommendations(new ArrayList<>(genreSet), SeedType.GENRE, amount);
     }
 
-    public List<MusicDto> getRecommendationsForTracks(List<MusicDto> musicDtos, int amount) {
+    public List<MusicDto> getRecommendationsForTracks(List<String> trackIds, int amount) {
+        Set<String> trackSet = new HashSet<>(trackIds);
+        return getRecommendations(new ArrayList<>(trackSet), SeedType.TRACK, amount);
+    }
+
+    public List<MusicDto> getRecommendationsForTrackDtos(List<MusicDto> musicDtos, int amount) {
         Set<String> trackIds = musicDtos.stream()
             .limit(5 /* Max seeds */)
             .map(musicDto -> searchTrack(musicDto.getTitle()))
@@ -103,28 +108,19 @@ public class SpotifyService {
             .map(TrackDto::getId)
             .collect(Collectors.toSet());
     
-        return getRecommendations(null, null, trackIds, amount);
+        return getRecommendations(new ArrayList<>(trackIds), SeedType.TRACK, amount);
     }
 
-    public List<MusicDto> getRecommendations(Collection<String> artistSeeds, Collection<String> genreSeeds, Collection<String> trackSeeds, int amount) {
+    private List<MusicDto> getRecommendations(Collection<String> seeds, SeedType type, int amount) {
         List<MusicDto> recommendations = new ArrayList<>();
         final int MAX_SEEDS = 5;
-        String artistSeedsStr = artistSeeds == null ? "" : artistSeeds.stream().limit(MAX_SEEDS).collect(Collectors.joining(","));
-        String genreSeedsStr = genreSeeds == null ? "" : genreSeeds.stream().limit(MAX_SEEDS).collect(Collectors.joining(","));
-        String trackSeedsStr = trackSeeds == null ? "" : trackSeeds.stream().limit(MAX_SEEDS).collect(Collectors.joining(","));
+        String seedsStr = seeds.stream()
+                               .limit(MAX_SEEDS)
+                               .collect(StringBuilder::new, (sb, s) -> sb.append(s).append(","), StringBuilder::append)
+                               .toString();
 
-        StringBuilder urlBuilder = new StringBuilder("https://api.spotify.com/v1/recommendations?limit=").append(amount);
-        if (!artistSeedsStr.isEmpty()) {
-            urlBuilder.append("&seed_artists=").append(artistSeedsStr);
-        }
-        if (!genreSeedsStr.isEmpty()) {
-            urlBuilder.append("&seed_genres=").append(genreSeedsStr);
-        }
-        if (!trackSeedsStr.isEmpty()) {
-            urlBuilder.append("&seed_tracks=").append(trackSeedsStr);
-        }
-        
-        SpotifyTracksResponse spotifyTracksResponse = getSpotifyData(urlBuilder.toString(), SpotifyTracksResponse.class);
+        String url = "https://api.spotify.com/v1/recommendations?limit=" + amount + "&" + type.getSeedParam() + "=" + seedsStr;
+        SpotifyTracksResponse spotifyTracksResponse = getSpotifyData(url, SpotifyTracksResponse.class);
         if (spotifyTracksResponse.getTracks() == null) {
             return recommendations;
         }
@@ -188,6 +184,22 @@ public class SpotifyService {
             return new URI(url);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Invalid URL: " + url, e);
+        }
+    }
+
+    private enum SeedType {
+        ARTIST("seed_artists"),
+        TRACK("seed_tracks"),
+        GENRE("seed_genres");
+
+        private final String seedParam;
+
+        SeedType(String value) {
+            this.seedParam = value;
+        }
+
+        public String getSeedParam() {
+            return seedParam;            
         }
     }
 }

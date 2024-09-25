@@ -41,7 +41,7 @@ public class FillCommand implements ISlashCommand {
             return;
         }
         
-        var recommendations = spotifyService.getRecommendationsForTracks(queueTracks, amount);
+        var recommendations = spotifyService.getRecommendationsForTrackDtos(queueTracks, amount);
         var songs = restService.getYoutubeUrl(recommendations, event.getGuild().getIdLong());
         if (songs.getCount() == 0) {
             event.getHook().sendMessageEmbeds(messageService.getEmbed("api.youtube.limit").setColor(Color.RED).build())
