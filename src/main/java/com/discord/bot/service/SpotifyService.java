@@ -5,10 +5,12 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -63,7 +65,7 @@ public class SpotifyService {
 
     public List<MusicDto> getTopTracksFromArtist(String artist, int amount) {
         List<MusicDto> musicDtos = new ArrayList<>();
-        Optional<ArtistDto> artistDto = getArtist(artist);
+        Optional<ArtistDto> artistDto = searchArtist(artist);
         if (artistDto.isEmpty()) {
             return musicDtos;
         }
@@ -83,24 +85,46 @@ public class SpotifyService {
         return musicDtos;
     }
 
-    public List<MusicDto> getRecommendations(List<MusicDto> musicDtos, int amount) {
+    public List<MusicDto> getRecommendationsForArtists(List<String> artistIds, int amount) {
+        Set<String> artistSet = new HashSet<>(artistIds);
+        return getRecommendations(new ArrayList<>(artistSet), null, null, amount);
+    }
+
+    public List<MusicDto> getRecommendationsForGenres(List<String> genres, int amount) {
+        Set<String> genreSet = new HashSet<>(genres);
+        return getRecommendations(null, new ArrayList<>(genreSet), null, amount);
+    }
+
+    public List<MusicDto> getRecommendationsForTracks(List<MusicDto> musicDtos, int amount) {
+        Set<String> trackIds = musicDtos.stream()
+            .limit(5 /* Max seeds */)
+            .map(musicDto -> searchTrack(musicDto.getTitle()))
+            .flatMap(Optional::stream)
+            .map(TrackDto::getId)
+            .collect(Collectors.toSet());
+    
+        return getRecommendations(null, null, trackIds, amount);
+    }
+
+    public List<MusicDto> getRecommendations(Collection<String> artistSeeds, Collection<String> genreSeeds, Collection<String> trackSeeds, int amount) {
         List<MusicDto> recommendations = new ArrayList<>();
-        Set<String> trackIds = new HashSet<>();
+        final int MAX_SEEDS = 5;
+        String artistSeedsStr = artistSeeds == null ? "" : artistSeeds.stream().limit(MAX_SEEDS).collect(Collectors.joining(","));
+        String genreSeedsStr = genreSeeds == null ? "" : genreSeeds.stream().limit(MAX_SEEDS).collect(Collectors.joining(","));
+        String trackSeedsStr = trackSeeds == null ? "" : trackSeeds.stream().limit(MAX_SEEDS).collect(Collectors.joining(","));
 
-        // Get track IDs from the first 5 musicDtos
-        final int MAX_RECOMMENDATIONS = 5;
-        for (MusicDto musicDto : musicDtos.stream().limit(MAX_RECOMMENDATIONS).toList()) {
-            Optional<TrackDto> trackDto = getTrack(musicDto.getTitle());
-            if (trackDto.isEmpty()) {
-                continue;
-            }
-            trackIds.add(trackDto.get().getId());
+        StringBuilder urlBuilder = new StringBuilder("https://api.spotify.com/v1/recommendations?limit=").append(amount);
+        if (!artistSeedsStr.isEmpty()) {
+            urlBuilder.append("&seed_artists=").append(artistSeedsStr);
         }
-
-        // Get recommendations based on the track IDs
-        String trackIdsStr = String.join(",", trackIds);
-        String url = "https://api.spotify.com/v1/recommendations?limit=" + amount + "&seed_tracks=" + trackIdsStr;
-        SpotifyTracksResponse spotifyTracksResponse = getSpotifyData(url, SpotifyTracksResponse.class);
+        if (!genreSeedsStr.isEmpty()) {
+            urlBuilder.append("&seed_genres=").append(genreSeedsStr);
+        }
+        if (!trackSeedsStr.isEmpty()) {
+            urlBuilder.append("&seed_tracks=").append(trackSeedsStr);
+        }
+        
+        SpotifyTracksResponse spotifyTracksResponse = getSpotifyData(urlBuilder.toString(), SpotifyTracksResponse.class);
         if (spotifyTracksResponse.getTracks() == null) {
             return recommendations;
         }
@@ -113,7 +137,7 @@ public class SpotifyService {
         return recommendations;
     }
 
-    private Optional<ArtistDto> getArtist(String query) {
+    public Optional<ArtistDto> searchArtist(String query) {
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
         String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=artist&limit=1";
         var response = getSpotifyData(url, SpotifySearchResponse.class);
@@ -127,7 +151,7 @@ public class SpotifyService {
         return Optional.of(artists.get(0));
     }
 
-    private Optional<TrackDto> getTrack(String query) {
+    public Optional<TrackDto> searchTrack(String query) {
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
         String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=track&limit=1";
         var response = getSpotifyData(url, SpotifySearchResponse.class);

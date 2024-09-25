@@ -26,8 +26,6 @@ public class TopCommand implements ISlashCommand {
 
         event.deferReply().queue();
 
-        assert artistOption != null;
-
         String artist = artistOption.getAsString().trim();
         int amount = amountOption != null ? amountOption.getAsInt() : 5;
         var topTracks = spotifyService.getTopTracksFromArtist(artist, amount);
