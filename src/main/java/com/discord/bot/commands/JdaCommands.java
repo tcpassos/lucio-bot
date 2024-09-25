@@ -76,6 +76,15 @@ public class JdaCommands {
                                                         .setRequired(true)),
                                 new SubcommandData("all", messageService.getMessage("command.remove.param.all")))
                         .setGuildOnly(true),
+                Commands.slash("top", messageService.getMessage("command.top.description"))
+                        .addOptions(new OptionData(OptionType.STRING, "artist", messageService.getMessage("command.top.param.artist"), true)
+                                        .setDescription(messageService.getMessage("command.top.param.artist")),
+                                    new OptionData(OptionType.INTEGER, "amount", messageService.getMessage("command.top.param.amount"), false)
+                                        .setDescription(messageService.getMessage("command.top.param.amount")))
+                        .setGuildOnly(true),
+                Commands.slash("fill", messageService.getMessage("command.fill.description"))
+                        .addOption(OptionType.INTEGER, "amount", messageService.getMessage("command.fill.param.amount"), false)
+                        .setGuildOnly(true),
                 Commands.slash("nowplaying", messageService.getMessage("command.nowplaying.description"))
                         .setGuildOnly(true),
                 Commands.slash("volume", messageService.getMessage("command.volume.description"))

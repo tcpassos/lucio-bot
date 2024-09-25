@@ -19,7 +19,9 @@ import com.discord.bot.listeners.ModalInteractionListener;
 import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
+import com.discord.bot.service.MusicService;
 import com.discord.bot.service.RestService;
+import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.SpotifyTokenService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.service.audioplayer.SfxService;
@@ -37,7 +39,9 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 public class LucioBot {
     private final static Logger logger = LoggerFactory.getLogger(LucioBot.class);
     final RestService restService;
+    final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
+    final MusicService musicService;
     final MusicCommandUtils musicCommandUtils;
     final SpotifyTokenService spotifyTokenService;
     final MessageService messageService;
@@ -56,12 +60,14 @@ public class LucioBot {
     @Value("${discord.bot.language}")
     private String botLanguage;
 
-    public LucioBot(RestService restService, PlayerManagerService playerManagerService,
-                    MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
+    public LucioBot(RestService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
+                    MusicService musicService, MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
                     MessageService messageService, SfxService sfxService,
                     GuildConfigRepository guildConfigRepository) {
         this.restService = restService;
+        this.spotifyService = spotifyService;
         this.playerManagerService = playerManagerService;
+        this.musicService = musicService;
         this.musicCommandUtils = musicCommandUtils;
         this.spotifyTokenService = spotifyTokenService;
         this.messageService = messageService;
@@ -83,7 +89,8 @@ public class LucioBot {
                 .enableCache(CacheFlag.ACTIVITY)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .addEventListeners(
-                    new CommandManager(restService, playerManagerService, messageService, sfxService, musicCommandUtils, guildConfigRepository, adminUserId),
+                    new CommandManager(restService, spotifyService, playerManagerService, musicService,
+                                       messageService, sfxService, musicCommandUtils, guildConfigRepository, adminUserId),
                     new ActivityListener(messageService, guildConfigRepository),
                     new ModalInteractionListener(messageService, guildConfigRepository),
                     new EntitySelectInteractionListener(messageService, guildConfigRepository)

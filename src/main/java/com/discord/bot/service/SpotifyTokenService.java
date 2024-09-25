@@ -33,7 +33,7 @@ public class SpotifyTokenService {
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(bodyParamMap, headers);
         TokenResponse tokenResponse = restTemplate.exchange(uri, HttpMethod.POST, entity, TokenResponse.class).getBody();
         assert tokenResponse != null;
-        RestService.spotifyToken = tokenResponse.getAccessToken();
+        SpotifyService.spotifyToken = tokenResponse.getAccessToken();
     }
 
     private URI createUri() {

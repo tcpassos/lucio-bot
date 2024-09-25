@@ -5,6 +5,8 @@ import java.util.ResourceBundle;
 
 import org.springframework.stereotype.Service;
 
+import net.dv8tion.jda.api.EmbedBuilder;
+
 @Service
 public class MessageService {
 
@@ -21,6 +23,10 @@ public class MessageService {
             return java.text.MessageFormat.format(message, params);
         }
         return message;
+    }
+
+    public EmbedBuilder getEmbed(String key, Object... params) {
+        return new EmbedBuilder().setDescription(getMessage(key, params));
     }
 
     public void changeLanguage(Locale newLocale) {

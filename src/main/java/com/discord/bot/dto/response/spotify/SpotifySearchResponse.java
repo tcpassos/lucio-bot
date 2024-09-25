@@ -6,17 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
-public class TrackDto {
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("name")
-    private String name;
+public class SpotifySearchResponse {
     @JsonProperty("artists")
-    private List<ArtistDto> artistDtoList;
+    private ArtistSearchDto artistSearchDto;
+    @JsonProperty("tracks")
+    private TrackSearchDto trackSearchDto;
 }

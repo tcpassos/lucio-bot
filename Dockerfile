@@ -2,10 +2,12 @@ FROM gradle:7.5-jdk17 AS builder
 
 WORKDIR /app
 
+# Cache dependencies
 COPY build.gradle /app/
-COPY src /app/src
+RUN gradle dependencies --no-daemon
 
-RUN gradle bootJar
+COPY src /app/src
+RUN gradle bootJar --no-daemon
 
 FROM azul/zulu-openjdk:17-latest
 WORKDIR /app

@@ -9,7 +9,9 @@ import com.discord.bot.commands.othercommands.LucrilhosCommand;
 import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
+import com.discord.bot.service.MusicService;
 import com.discord.bot.service.RestService;
+import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.service.audioplayer.SfxService;
 
@@ -23,7 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandManager extends ListenerAdapter {
     final RestService restService;
+    final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
+    final MusicService musicService;
     final MessageService messageService;
     final SfxService sfxService;
     final MusicCommandUtils musicCommandUtils;
@@ -31,12 +35,13 @@ public class CommandManager extends ListenerAdapter {
     private final String adminUserId;
     private Map<String, ISlashCommand> commandsMap;
 
-    public CommandManager(RestService restService, PlayerManagerService playerManagerService,
-                          MessageService messageService, SfxService sfxService,
-                          MusicCommandUtils musicCommandUtils, GuildConfigRepository guildConfigRepository,
-                          String adminUserId) {
+    public CommandManager(RestService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
+                          MusicService musicService, MessageService messageService, SfxService sfxService,
+                          MusicCommandUtils musicCommandUtils, GuildConfigRepository guildConfigRepository, String adminUserId) {
         this.restService = restService;
+        this.spotifyService = spotifyService;
         this.playerManagerService = playerManagerService;
+        this.musicService = musicService;
         this.messageService = messageService;
         this.sfxService = sfxService;
         this.musicCommandUtils = musicCommandUtils;
@@ -67,7 +72,7 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("guilds", new GuildsCommand(adminUserId));
         commandsMap.put("logs", new LogsCommand(adminUserId));
         // Music commands
-        commandsMap.put("play", new PlayCommand(restService, playerManagerService, messageService, sfxService, musicCommandUtils));
+        commandsMap.put("play", new PlayCommand(messageService, restService, spotifyService, musicService));
         commandsMap.put("skip", new SkipCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("forward", new ForwardCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("rewind", new RewindCommand(playerManagerService, messageService, musicCommandUtils));
@@ -79,6 +84,8 @@ public class CommandManager extends ListenerAdapter {
         commandsMap.put("shuffle", new ShuffleCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("loop", new LoopCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("remove", new RemoveCommand(playerManagerService, messageService, musicCommandUtils));
+        commandsMap.put("top", new TopCommand(messageService, restService, spotifyService, musicService));
+        commandsMap.put("fill", new FillCommand(messageService, restService, spotifyService, musicService, playerManagerService));
         commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("volume", new VolumeCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());

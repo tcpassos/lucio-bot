@@ -138,25 +138,19 @@ public class PlayerManagerService {
     @Async
     public void loadMultipleAndPlay(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto) {
         final GuildAudioManager audioManager = this.getAudioManager(event.getGuild());
-        EmbedBuilder embedBuilder = new EmbedBuilder();
 
         if (multipleMusicDto.getFailCount() > 0) {
-            event.getHook().sendMessageEmbeds(embedBuilder
-                            .setDescription(multipleMusicDto.getCount() + " tracks read and will be queued soon, " +
-                                    multipleMusicDto.getFailCount() +
-                                    " tracks failed to read because youtube quota exceeded," +
-                                    " please use youtube urls to play songs afterwards for today.")
-                            .setColor(Color.ORANGE)
-                            .build())
+            event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.queue.added.songs.partial", multipleMusicDto.getCount(), multipleMusicDto.getFailCount())
+                                                            .setColor(Color.ORANGE)
+                                                            .build())
                     .setEphemeral(true)
                     .queue();
         } else {
-            event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                            .setDescription(multipleMusicDto.getCount() + " tracks read and will be queued soon.")
-                            .setColor(Color.GREEN)
-                            .build())
-                    .setEphemeral(true)
-                    .queue();
+            event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.queue.added.songs", multipleMusicDto.getCount())
+                                                            .setColor(Color.GREEN)
+                                                            .build())
+                           .setEphemeral(true)
+                           .queue();
         }
 
         for (MusicDto musicDto : multipleMusicDto.getMusicDtoList()) {

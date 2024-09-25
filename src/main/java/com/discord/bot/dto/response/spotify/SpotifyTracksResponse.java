@@ -12,11 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TrackDto {
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("artists")
-    private List<ArtistDto> artistDtoList;
+public class SpotifyTracksResponse {
+    @JsonProperty("tracks")
+    private List<TrackDto> tracks;
 }

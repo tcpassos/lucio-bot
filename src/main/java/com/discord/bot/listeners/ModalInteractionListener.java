@@ -25,10 +25,8 @@ public class ModalInteractionListener extends ListenerAdapter {
     public void onModalInteraction(ModalInteractionEvent event) {
         if (event.getModalId().equals("configure-modal")) {
             if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setTitle(messageService.getMessage("bot.user.permission.denied"))
-                        .setColor(Color.RED)
-                        .setDescription(messageService.getMessage("bot.user.permission.manageserver"));
+                EmbedBuilder embedBuilder = new EmbedBuilder().setDescription(messageService.getMessage("bot.user.permission.manageserver"))
+                                                              .setColor(Color.RED);
                 event.getHook().sendMessageEmbeds(embedBuilder.build()).setEphemeral(true).queue();
                 return;
             }
