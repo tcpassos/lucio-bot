@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import org.springframework.stereotype.Service;
 
-import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.service.audioplayer.SfxService;
@@ -35,7 +35,7 @@ public class MusicService {
             int trackSize = multipleMusicDto.getMusicDtoList().size();
             if (trackSize != 0) {
                 if (botChannel == null) {
-                    GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
+                    GuildPlaybackManager musicManager = playerManagerService.getPlaybackManager(event.getGuild());
                     utils.playerCleaner(musicManager);
 
                     if (!userChannel.getGuild().getSelfMember().hasPermission(userChannel, Permission.VOICE_CONNECT)) {
@@ -65,7 +65,7 @@ public class MusicService {
             event.getHook().sendMessageEmbeds(embedBuilder.build()).setEphemeral(true).queue();
     }
 
-    public AudioChannel getAudioChannel(SlashCommandInteractionEvent event, boolean self) {
+    private AudioChannel getAudioChannel(SlashCommandInteractionEvent event, boolean self) {
         AudioChannelUnion audioChannel = null;
 
         var member = event.getMember();

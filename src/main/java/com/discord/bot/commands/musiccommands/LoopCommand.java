@@ -21,8 +21,8 @@ public class LoopCommand implements ISlashCommand {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         if (utils.channelControl(event)) {
-            boolean repeat = playerManagerService.getAudioManager(event.getGuild()).musicScheduler.repeating;
-            playerManagerService.getAudioManager(event.getGuild()).musicScheduler.repeating = !repeat;
+            boolean repeat = playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.repeating;
+            playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.repeating = !repeat;
 
             if (!repeat) embedBuilder.setDescription(messageService.getMessage("bot.song.loop.enabled")).setColor(Color.GREEN);
             else embedBuilder.setDescription(messageService.getMessage("bot.song.loop.disabled")).setColor(Color.RED);

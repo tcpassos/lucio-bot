@@ -30,7 +30,7 @@ public class FillCommand implements ISlashCommand {
         int amount = amountOption != null ? amountOption.getAsInt() : 5;
         event.deferReply().queue();
 
-        var queue = playerManagerService.getAudioManager(event.getGuild()).musicScheduler.queue;
+        var queue = playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.queue;
         List<MusicDto> queueTracks = new ArrayList<>();
         queue.forEach(track -> queueTracks.add(new MusicDto(track.getInfo().author + " - " + track.getInfo().title, null)));
 

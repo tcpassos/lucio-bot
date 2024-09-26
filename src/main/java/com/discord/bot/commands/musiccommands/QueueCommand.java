@@ -22,7 +22,7 @@ public class QueueCommand implements ISlashCommand {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        BlockingQueue<AudioTrack> queue = playerManagerService.getAudioManager(event.getGuild()).musicScheduler.queue;
+        BlockingQueue<AudioTrack> queue = playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.queue;
         var trackList = queue.stream().toList();
 
         if (queue.isEmpty()) {

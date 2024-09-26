@@ -1,18 +1,19 @@
 package com.discord.bot.service.audioplayer;
 
 import java.awt.Color;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.entity.Music;
@@ -39,7 +40,7 @@ import net.dv8tion.jda.api.managers.AudioManager;
 @Service
 public class PlayerManagerService {
     private final static Logger logger = LoggerFactory.getLogger(PlayerManagerService.class);
-    private final Map<Long, GuildAudioManager> musicManagers;
+    private final ConcurrentMap<Long, GuildPlaybackManager> musicManagers;
     private final AudioPlayerManager audioPlayerManager;
     private final MusicRepository musicRepository;
     private final MessageService messageService;
@@ -48,7 +49,7 @@ public class PlayerManagerService {
     private String refreshToken;
 
     public PlayerManagerService(MusicRepository musicRepository, MessageService messageService) {
-        this.musicManagers = new HashMap<>();
+        this.musicManagers = new ConcurrentHashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
 
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
@@ -65,28 +66,25 @@ public class PlayerManagerService {
         this.messageService = messageService;
     }
 
-    public GuildAudioManager getAudioManager(Guild guild) {
-        if (guild != null) {
-            return this.musicManagers.computeIfAbsent(guild.getIdLong(), (guildId) -> {
-                final GuildAudioManager guildMusicManager = new GuildAudioManager(this.audioPlayerManager, guild);
-
-                guild.getAudioManager().setSendingHandler(guildMusicManager.getSendHandler());
-
-                return guildMusicManager;
-            });
+    public GuildPlaybackManager getPlaybackManager(Guild guild) {
+        if (guild == null) {
+            return null;
         }
 
-        return null;
+        return this.musicManagers.computeIfAbsent(guild.getIdLong(), guildId -> {
+            final GuildPlaybackManager guildMusicManager = new GuildPlaybackManager(this.audioPlayerManager, guild);
+            guild.getAudioManager().setSendingHandler(guildMusicManager.getSendHandler());
+            return guildMusicManager;
+        });
     }
 
     public void loadAndPlay(SlashCommandInteractionEvent event, MusicDto musicDto) {
-        final GuildAudioManager musicManager = this.getAudioManager(event.getGuild());
+        final GuildPlaybackManager musicManager = this.getPlaybackManager(event.getGuild());
         EmbedBuilder embedBuilder = new EmbedBuilder();
         this.audioPlayerManager.loadItemOrdered(musicManager, musicDto.getReference(), new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 String trackUrl = track.getInfo().uri;
-
                 embedBuilder.setDescription(messageService.getMessage("bot.queue.added.song", "[" + track.getInfo().title + "](" + trackUrl + ")", musicManager.musicScheduler.queue.size() + 1))
                             .setColor(Color.GREEN)
                             .setThumbnail(track.getInfo().artworkUrl);
@@ -137,7 +135,7 @@ public class PlayerManagerService {
 
     @Async
     public void loadMultipleAndPlay(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto) {
-        final GuildAudioManager audioManager = this.getAudioManager(event.getGuild());
+        final GuildPlaybackManager audioManager = this.getPlaybackManager(event.getGuild());
 
         if (multipleMusicDto.getFailCount() > 0) {
             event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.queue.added.songs.partial", multipleMusicDto.getCount(), multipleMusicDto.getFailCount())
@@ -180,7 +178,7 @@ public class PlayerManagerService {
     }
 
     public void loadAndPlaySfx(Guild guild, String reference) {
-        GuildAudioManager guildAudioManager = getAudioManager(guild);
+        GuildPlaybackManager guildAudioManager = getPlaybackManager(guild);
 
         audioPlayerManager.loadItem(reference, new AudioLoadResultHandler() {
             @Override
@@ -221,7 +219,7 @@ public class PlayerManagerService {
         Guild guild = audioChannel.getGuild();
         AudioManager audioManager = guild.getAudioManager();
         audioManager.openAudioConnection(audioChannel);
-        audioManager.setSendingHandler(getAudioManager(guild).getSendHandler());
+        audioManager.setSendingHandler(getPlaybackManager(guild).getSendHandler());
     }
 
     private void saveTrack(AudioTrack track, String title) {
@@ -230,5 +228,15 @@ public class PlayerManagerService {
             Music dbMusic = musicRepository.findFirstByTitle(music.getTitle());
             if (dbMusic == null) musicRepository.save(music);
         }
+    }
+
+    @Scheduled(fixedRate = 10000)
+    protected void checkToDisconnectAll() {
+        musicManagers.values().forEach(GuildPlaybackManager::checkToDisconnect);
+    }
+
+    @Scheduled(fixedRate = 5000)
+    protected void updateActivityAll() {
+        musicManagers.values().forEach(GuildPlaybackManager::updateActivity);
     }
 }

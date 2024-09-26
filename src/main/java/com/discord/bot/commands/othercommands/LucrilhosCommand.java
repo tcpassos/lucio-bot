@@ -1,6 +1,6 @@
 package com.discord.bot.commands.othercommands;
 
-import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 import com.discord.bot.service.audioplayer.SfxService;
@@ -38,7 +38,7 @@ public class LucrilhosCommand implements ISlashCommand {
         AudioManager audioManager = guild.getAudioManager();
 
         audioManager.openAudioConnection(voiceChannel);
-        GuildAudioManager musicManager = playerManagerService.getAudioManager(guild);
+        GuildPlaybackManager musicManager = playerManagerService.getPlaybackManager(guild);
         audioManager.setSendingHandler(musicManager.getSendHandler());
 
         playerManagerService.loadAndPlaySfx(guild, sfxService.getSound("lucrilhos.ogg"));

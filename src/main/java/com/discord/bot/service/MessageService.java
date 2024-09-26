@@ -17,6 +17,10 @@ public class MessageService {
         bundle = ResourceBundle.getBundle("messages", defaultLocale);
     }
 
+    public void changeLanguage(Locale newLocale) {
+        bundle = ResourceBundle.getBundle("messages", newLocale);
+    }
+
     public String getMessage(String key, Object... params) {
         String message = bundle.getString(key);
         if (params != null && params.length > 0) {
@@ -27,9 +31,5 @@ public class MessageService {
 
     public EmbedBuilder getEmbed(String key, Object... params) {
         return new EmbedBuilder().setDescription(getMessage(key, params));
-    }
-
-    public void changeLanguage(Locale newLocale) {
-        bundle = ResourceBundle.getBundle("messages", newLocale);
     }
 }

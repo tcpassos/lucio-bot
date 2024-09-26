@@ -1,6 +1,6 @@
 package com.discord.bot.service;
 
-import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -52,7 +52,7 @@ public class MusicCommandUtils {
         return ephemeralOption == null || ephemeralOption.getAsBoolean();
     }
 
-    public void playerCleaner(GuildAudioManager musicManager) {
+    public void playerCleaner(GuildPlaybackManager musicManager) {
         musicManager.musicScheduler.repeating = false;
         musicManager.musicScheduler.player.setPaused(false);
         musicManager.musicScheduler.player.stopTrack();

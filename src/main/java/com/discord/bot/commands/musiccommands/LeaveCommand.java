@@ -1,6 +1,6 @@
 package com.discord.bot.commands.musiccommands;
 
-import com.discord.bot.audioplayer.GuildAudioManager;
+import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -23,7 +23,7 @@ public class LeaveCommand implements ISlashCommand {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         if (utils.channelControl(event)) {
-            GuildAudioManager musicManager = playerManagerService.getAudioManager(event.getGuild());
+            GuildPlaybackManager musicManager = playerManagerService.getPlaybackManager(event.getGuild());
             @SuppressWarnings("DataFlowIssue")
             AudioManager audioManager = event.getGuild().getAudioManager();
             utils.playerCleaner(musicManager);
