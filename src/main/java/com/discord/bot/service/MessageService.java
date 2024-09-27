@@ -1,5 +1,6 @@
 package com.discord.bot.service;
 
+import java.awt.Color;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -31,5 +32,9 @@ public class MessageService {
 
     public EmbedBuilder getEmbed(String key, Object... params) {
         return new EmbedBuilder().setDescription(getMessage(key, params));
+    }
+
+    public EmbedBuilder getEmbedError(String key, Object... params) {
+        return new EmbedBuilder().setDescription(getMessage(key, params)).setColor(Color.RED);
     }
 }

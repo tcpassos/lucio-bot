@@ -57,7 +57,8 @@ public class SpotifyService {
             String trackId = spotifyUrl.substring(idIndex, idIndex + 22);
             SpotifyTrackResponse spotifyTrackResponse = getSpotifyTrackData(trackId);
             String musicName = spotifyTrackResponse.getArtistDtoList().get(0).getName() + " - " + spotifyTrackResponse.getSongName();
-            musicDtos.add(new MusicDto(musicName, null));
+            String externalUrl = spotifyTrackResponse.getExternalUrls().getSpotify();
+            musicDtos.add(new MusicDto(musicName, null, externalUrl));
         }
 
         return musicDtos;
@@ -161,12 +162,12 @@ public class SpotifyService {
         return Optional.of(tracks.get(0));
     }
 
-    private SpotifyTrackResponse getSpotifyTrackData(String trackId) {
+    public SpotifyTrackResponse getSpotifyTrackData(String trackId) {
         String url = "https://api.spotify.com/v1/tracks/" + trackId;
         return getSpotifyData(url, SpotifyTrackResponse.class);
     }
 
-    private SpotifyPlaylistResponse getSpotifyPlaylistData(String playlistId) {
+    public SpotifyPlaylistResponse getSpotifyPlaylistData(String playlistId) {
         String url = "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks?fields=items(track(name,artists(name)))";
         return getSpotifyData(url, SpotifyPlaylistResponse.class);
     }

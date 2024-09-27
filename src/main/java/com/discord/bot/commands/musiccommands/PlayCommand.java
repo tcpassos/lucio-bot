@@ -1,6 +1,5 @@
 package com.discord.bot.commands.musiccommands;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,31 +25,57 @@ public class PlayCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         var queryOption = event.getOption("query");
         event.deferReply().queue();
-
-        assert queryOption != null;
-        String query = queryOption.getAsString().trim();
-        MultipleMusicDto multipleMusicDto = getSongUrl(query, event.getGuild().getIdLong());
-        if (multipleMusicDto.getCount() == 0) {
-            event.getHook().sendMessageEmbeds(messageService.getEmbed("api.youtube.limit").setColor(Color.RED).build())
+    
+        if (queryOption == null) {
+            event.getHook().sendMessageEmbeds(messageService.getEmbedError("api.youtube.limit").build())
                            .setEphemeral(true)
                            .queue();
             return;
         }
+    
+        String query = queryOption.getAsString().trim();
+        MultipleMusicDto multipleMusicDto = getSongUrl(query, event.getGuild().getIdLong());
+    
+        if (multipleMusicDto.getCount() == 0) {
+            event.getHook().sendMessageEmbeds(messageService.getEmbedError("api.youtube.limit").build())
+                           .setEphemeral(true)
+                           .queue();
+            return;
+        }
+    
+        if (multipleMusicDto.getCount() == 1) {
+            MusicDto musicDto = multipleMusicDto.getMusicDtoList().get(0);
+            String originalUrl = musicDto.getOriginalUrl() != null ? musicDto.getOriginalUrl() : query;
+            String message = (musicDto.getTitle() == null) 
+                ? String.format("Adicionando à fila :musical_note: %s :musical_note:", originalUrl)
+                : String.format("Adicionando à fila :musical_note: [%s](%s) :musical_note:", musicDto.getTitle(), originalUrl);
+    
+            event.getHook().sendMessage(message).queue();
+        } else if (query.startsWith("https://open.spotify.com/playlist/")) {
+            String message = String.format("Adicionando à fila :musical_note: %s :musical_note:", query);
+            event.getHook().sendMessage(message).queue();
+        }
+    
         musicService.playMusic(event, multipleMusicDto);
     }
 
     private MultipleMusicDto getSongUrl(String query, Long guildId) {
         List<MusicDto> musicDtos = new ArrayList<>();
-        if (query.contains("https://www.youtube.com/shorts/")) query = youtubeShortsToVideo(query);
-        if (isSupportedUrl(query)) {
-            musicDtos.add(new MusicDto(null, query));
-            return new MultipleMusicDto(1, musicDtos, 0);
-        } else if (query.contains("https://open.spotify.com/")) {
-            musicDtos = spotifyService.getTracksFromSpotify(query);
-            return restService.getYoutubeUrl(musicDtos, guildId);
-        } else {
-            return restService.getYoutubeUrl(new MusicDto(query, null), guildId);
+
+        if (query.contains("https://www.youtube.com/shorts/")) {
+            query = youtubeShortsToVideo(query);
         }
+        if (isSupportedUrl(query)) {
+            musicDtos.add(new MusicDto(null, query, query));
+            return new MultipleMusicDto(1, musicDtos, 0);
+        }
+
+        if (query.contains("https://open.spotify.com/")) {
+            musicDtos = spotifyService.getTracksFromSpotify(query);
+        } else {
+            musicDtos.add(new MusicDto(query, null));
+        }
+        return restService.getYoutubeUrl(musicDtos, guildId);
     }
 
     private boolean isSupportedUrl(String url) {

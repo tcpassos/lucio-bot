@@ -46,10 +46,10 @@ public class VolumeCommand implements ISlashCommand {
 
             // Play a sound when the volume is increased or is too low
             if (previousVolume < volume) {
-                playerManagerService.loadAndPlaySfx(event.getGuild(), sfxService.getSound(SfxType.VOLUME_UP));
+                playerManagerService.loadAndPlaySfx(event.getMember().getVoiceState().getChannel(), sfxService.getSound(SfxType.VOLUME_UP));
             }
             if (previousVolume > volume && volume < 30) {
-                playerManagerService.loadAndPlaySfx(event.getGuild(), sfxService.getSound(SfxType.VOLUME_LOW));
+                playerManagerService.loadAndPlaySfx(event.getMember().getVoiceState().getChannel(), sfxService.getSound(SfxType.VOLUME_LOW));
             }
 
             embedBuilder.setTitle("Volume")

@@ -6,17 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
-public class SpotifyTrackResponse {
-    @JsonProperty("artists")
-    private List<ArtistDto> artistDtoList;
-    @JsonProperty("name")
-    private String songName;
-    @JsonProperty("external_urls")
-    private ExternalUrlsDto externalUrls;
+public class ExternalUrlsDto {
+    @JsonProperty("spotify")
+    private String spotify;
 }

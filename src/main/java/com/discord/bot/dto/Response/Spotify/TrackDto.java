@@ -19,4 +19,6 @@ public class TrackDto {
     private String name;
     @JsonProperty("artists")
     private List<ArtistDto> artistDtoList;
+    @JsonProperty("external_urls")
+    private ExternalUrlsDto externalUrlsDto;
 }

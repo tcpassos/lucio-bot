@@ -30,9 +30,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
@@ -55,7 +54,7 @@ public class PlayerManagerService {
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
         // yt.useOauth2(refreshToken, true);
-        yt.useOauth2(null, false);
+        // yt.useOauth2(null, false);
         this.audioPlayerManager.registerSourceManager(yt);
 
         this.audioPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
@@ -86,10 +85,9 @@ public class PlayerManagerService {
             public void trackLoaded(AudioTrack track) {
                 String trackUrl = track.getInfo().uri;
                 embedBuilder.setDescription(messageService.getMessage("bot.queue.added.song", "[" + track.getInfo().title + "](" + trackUrl + ")", musicManager.musicScheduler.queue.size() + 1))
-                            .setColor(Color.GREEN)
-                            .setThumbnail(track.getInfo().artworkUrl);
+                            .setColor(Color.GREEN);
                 event.getHook().sendMessageEmbeds(embedBuilder.build())
-                        .setEphemeral(false)
+                        .setEphemeral(true)
                         .queue();
 
                 musicManager.musicScheduler.queue(track);
@@ -107,7 +105,7 @@ public class PlayerManagerService {
                                 .setDescription(messageService.getMessage("bot.queue.added.playlist", tracks.size()))
                                 .setColor(Color.GREEN)
                                 .build())
-                        .setEphemeral(false)
+                        .setEphemeral(true)
                         .queue();
             }
 
@@ -177,13 +175,13 @@ public class PlayerManagerService {
         }
     }
 
-    public void loadAndPlaySfx(Guild guild, String reference) {
-        GuildPlaybackManager guildAudioManager = getPlaybackManager(guild);
-
+    public void loadAndPlaySfx(@NonNull AudioChannel channel, @NonNull String reference) {
+        joinVoiceChannel(channel);
+        GuildPlaybackManager playbackManager = getPlaybackManager(channel.getGuild());
         audioPlayerManager.loadItem(reference, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                guildAudioManager.getSfxPlayer().startTrack(track, false);
+                playbackManager.getSfxPlayer().startTrack(track, false);
             }
 
             @Override
@@ -203,23 +201,19 @@ public class PlayerManagerService {
         });
     }
 
-    public void loadAndPlaySfx(@NonNull Member member, @NonNull String reference) {
-        Guild guild = member.getGuild();
-        GuildVoiceState memberVoiceState = member.getVoiceState();
-
-        if (memberVoiceState == null || !memberVoiceState.inAudioChannel()) {
-            return;
-        }
-
-        joinVoiceChannel(memberVoiceState.getChannel());
-        loadAndPlaySfx(guild, reference);
-    }
-
-    private void joinVoiceChannel(AudioChannel audioChannel) {
+    public boolean joinVoiceChannel(AudioChannel audioChannel) {
         Guild guild = audioChannel.getGuild();
         AudioManager audioManager = guild.getAudioManager();
+        var playerbackManager = getPlaybackManager(guild);
+
+        if (!guild.getSelfMember().hasPermission(audioChannel, Permission.VOICE_CONNECT)) {
+            logger.warn("The bot does not have permission to connect to the voice channel.");
+            return false;
+        }
+
         audioManager.openAudioConnection(audioChannel);
-        audioManager.setSendingHandler(getPlaybackManager(guild).getSendHandler());
+        audioManager.setSendingHandler(playerbackManager.getSendHandler());
+        return true;
     }
 
     private void saveTrack(AudioTrack track, String title) {

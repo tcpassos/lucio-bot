@@ -33,7 +33,7 @@ public class BupCommand implements ISlashCommand {
             return;
         }
 
-        playerManagerService.loadAndPlaySfx(memberToBup, sfxService.getSound("bup.ogg"));
+        playerManagerService.loadAndPlaySfx(memberVoiceState.getChannel(), sfxService.getSound("bup.ogg"));
 
         event.reply("Bup!").queue();
     }
