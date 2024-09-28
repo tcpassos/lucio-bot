@@ -17,6 +17,8 @@ public class SpotifyTrackResponse {
     private List<ArtistDto> artistDtoList;
     @JsonProperty("name")
     private String songName;
+    @JsonProperty("duration_ms")
+    private int durationMs;
     @JsonProperty("external_urls")
     private ExternalUrlsDto externalUrls;
 }

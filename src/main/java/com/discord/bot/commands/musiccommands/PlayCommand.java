@@ -8,7 +8,7 @@ import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicService;
-import com.discord.bot.service.RestService;
+import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
 
 import lombok.AllArgsConstructor;
@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 @AllArgsConstructor
 public class PlayCommand implements ISlashCommand {
     MessageService messageService;
-    RestService restService;
+    YoutubeService restService;
     SpotifyService spotifyService;
     MusicService musicService;
 
@@ -34,7 +34,7 @@ public class PlayCommand implements ISlashCommand {
         }
     
         String query = queryOption.getAsString().trim();
-        MultipleMusicDto multipleMusicDto = getSongUrl(query, event.getGuild().getIdLong());
+        MultipleMusicDto multipleMusicDto = getSongUrl(query);
     
         if (multipleMusicDto.getCount() == 0) {
             event.getHook().sendMessageEmbeds(messageService.getEmbedError("api.youtube.limit").build())
@@ -59,7 +59,7 @@ public class PlayCommand implements ISlashCommand {
         musicService.playMusic(event, multipleMusicDto);
     }
 
-    private MultipleMusicDto getSongUrl(String query, Long guildId) {
+    private MultipleMusicDto getSongUrl(String query) {
         List<MusicDto> musicDtos = new ArrayList<>();
 
         if (query.contains("https://www.youtube.com/shorts/")) {
@@ -69,19 +69,14 @@ public class PlayCommand implements ISlashCommand {
             musicDtos.add(new MusicDto(null, query, query));
             return new MultipleMusicDto(1, musicDtos, 0);
         }
-
-        if (query.contains("https://open.spotify.com/")) {
-            musicDtos = spotifyService.getTracksFromSpotify(query);
-        } else {
-            musicDtos.add(new MusicDto(query, null));
-        }
-        return restService.getYoutubeUrl(musicDtos, guildId);
+        return restService.getYoutubeUrl(musicDtos);
     }
 
     private boolean isSupportedUrl(String url) {
         return (url.contains("https://www.youtube.com/watch?v=")
                 || url.contains("https://youtu.be/")
                 || url.contains("https://youtube.com/playlist?list=")
+                || url.contains("https://open.spotify.com/")
                 || url.contains("https://music.youtube.com/watch?v=")
                 || url.contains("https://music.youtube.com/playlist?list=")
                 || url.contains("https://www.twitch.tv/")

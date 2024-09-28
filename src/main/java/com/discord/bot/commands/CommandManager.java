@@ -1,36 +1,58 @@
 package com.discord.bot.commands;
 
-import com.discord.bot.commands.admincommands.GuildsCommand;
-import com.discord.bot.commands.admincommands.LogsCommand;
-import com.discord.bot.commands.musiccommands.*;
-import com.discord.bot.commands.othercommands.BupCommand;
-import com.discord.bot.commands.othercommands.ConfigureCommand;
-import com.discord.bot.commands.othercommands.LucrilhosCommand;
-import com.discord.bot.repository.GuildConfigRepository;
-import com.discord.bot.service.MessageService;
-import com.discord.bot.service.MusicCommandUtils;
-import com.discord.bot.service.MusicService;
-import com.discord.bot.service.RestService;
-import com.discord.bot.service.SpotifyService;
-import com.discord.bot.service.audioplayer.PlayerManagerService;
-import com.discord.bot.service.audioplayer.SfxService;
-
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.Command;
-
-import org.springframework.lang.NonNull;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CommandManager extends ListenerAdapter {
-    final RestService restService;
+import org.springframework.lang.NonNull;
+
+import com.discord.bot.commands.admincommands.GuildsCommand;
+import com.discord.bot.commands.admincommands.LogsCommand;
+import com.discord.bot.commands.musiccommands.FillCommand;
+import com.discord.bot.commands.musiccommands.ForwardCommand;
+import com.discord.bot.commands.musiccommands.LeaveCommand;
+import com.discord.bot.commands.musiccommands.LoopCommand;
+import com.discord.bot.commands.musiccommands.MixCommand;
+import com.discord.bot.commands.musiccommands.MusicHelpCommand;
+import com.discord.bot.commands.musiccommands.NowPlayingCommand;
+import com.discord.bot.commands.musiccommands.PauseCommand;
+import com.discord.bot.commands.musiccommands.PlayCommand;
+import com.discord.bot.commands.musiccommands.QueueButton;
+import com.discord.bot.commands.musiccommands.QueueCommand;
+import com.discord.bot.commands.musiccommands.RemoveCommand;
+import com.discord.bot.commands.musiccommands.ResumeCommand;
+import com.discord.bot.commands.musiccommands.RewindCommand;
+import com.discord.bot.commands.musiccommands.ShuffleCommand;
+import com.discord.bot.commands.musiccommands.SkipCommand;
+import com.discord.bot.commands.musiccommands.SwapCommand;
+import com.discord.bot.commands.musiccommands.TopCommand;
+import com.discord.bot.commands.musiccommands.VolumeCommand;
+import com.discord.bot.commands.othercommands.BupCommand;
+import com.discord.bot.commands.othercommands.ConfigureCommand;
+import com.discord.bot.commands.othercommands.LucrilhosCommand;
+import com.discord.bot.context.GuildContext;
+import com.discord.bot.context.GuildContextHolder;
+import com.discord.bot.entity.GuildConfig;
+import com.discord.bot.listeners.BaseGuildListener;
+import com.discord.bot.repository.GuildConfigRepository;
+import com.discord.bot.service.MessageService;
+import com.discord.bot.service.MusicCommandUtils;
+import com.discord.bot.service.MusicService;
+import com.discord.bot.service.SpotifyService;
+import com.discord.bot.service.YoutubeService;
+import com.discord.bot.service.audioplayer.PlayerManagerService;
+import com.discord.bot.service.audioplayer.SfxService;
+
+import net.dv8tion.jda.api.events.guild.GenericGuildEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
+
+public class CommandManager extends BaseGuildListener {
+    final YoutubeService restService;
     final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
     final MusicService musicService;
@@ -41,9 +63,10 @@ public class CommandManager extends ListenerAdapter {
     private final String adminUserId;
     private Map<String, ISlashCommand> commandsMap;
 
-    public CommandManager(RestService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
+    public CommandManager(YoutubeService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
                           MusicService musicService, MessageService messageService, SfxService sfxService,
                           MusicCommandUtils musicCommandUtils, GuildConfigRepository guildConfigRepository, String adminUserId) {
+        super(guildConfigRepository);
         this.restService = restService;
         this.spotifyService = spotifyService;
         this.playerManagerService = playerManagerService;
@@ -54,6 +77,18 @@ public class CommandManager extends ListenerAdapter {
         this.guildConfigRepository = guildConfigRepository;
         this.adminUserId = adminUserId;
         commandMapper();
+    }
+
+    @Override
+    public void onGenericGuild(GenericGuildEvent event) {
+        Long guildId = event.getGuild().getIdLong();
+        GuildConfig guildConfig = guildRepository.findById(guildId)
+            .orElseGet(() -> {
+                GuildConfig newConfig = new GuildConfig(guildId);
+                guildRepository.save(newConfig);
+                return newConfig;
+            });
+        GuildContextHolder.setGuildContext(new GuildContext(guildId, guildConfig));
     }
 
     @Override

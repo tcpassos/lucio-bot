@@ -10,31 +10,27 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.discord.bot.context.GuildContextHolder;
 import com.discord.bot.dto.response.youtube.YoutubeResponse;
 import com.discord.bot.entity.GuildConfig;
-import com.discord.bot.repository.GuildConfigRepository;
 
 @Service
 public class YouTubeApiService {
     private final static Logger logger = LoggerFactory.getLogger(YouTubeApiService.class);
     private final RestTemplate restTemplate;
-    private final GuildConfigRepository guildConfigRepository;
 
-    public YouTubeApiService(RestTemplateBuilder restTemplateBuilder, GuildConfigRepository guildConfigRepository) {
+    public YouTubeApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
-        this.guildConfigRepository = guildConfigRepository;
     }
 
-    public String searchVideoId(String songTitle, Long guildId) {
+    public String searchVideoId(String songTitle) {
         try {
-            GuildConfig guildConfig = guildConfigRepository.findByGuildId(guildId);
-
-            String apiKey = (guildConfig != null && guildConfig.getYoutubeApiKey() != null)
-                    ? guildConfig.getYoutubeApiKey()
-                    : null;
+            var context = GuildContextHolder.getGuildContext();
+            GuildConfig guildConfig = context.getGuildConfig();
+            String apiKey = guildConfig.getYoutubeApiKey();
 
             if (apiKey == null) {
-                logger.error("YouTube API key is missing for guild ID: " + guildId);
+                logger.error("YouTube API key is missing for guild ID: " + context.getGuildId());
                 return null;
             }
 

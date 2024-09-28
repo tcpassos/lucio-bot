@@ -21,7 +21,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.dto.response.spotify.ArtistDto;
-import com.discord.bot.dto.response.spotify.SpotifyItemDto;
 import com.discord.bot.dto.response.spotify.SpotifyPlaylistResponse;
 import com.discord.bot.dto.response.spotify.SpotifySearchResponse;
 import com.discord.bot.dto.response.spotify.SpotifyTrackResponse;
@@ -36,32 +35,6 @@ public class SpotifyService {
 
     public SpotifyService() {
         this.restTemplate = new RestTemplateBuilder().build();
-    }
-
-    public List<MusicDto> getTracksFromSpotify(String spotifyUrl) {
-        List<MusicDto> musicDtos = new ArrayList<>();
-
-        // Playlist URL
-        if (spotifyUrl.contains("https://open.spotify.com/playlist/")) {
-            String playlistId = spotifyUrl.substring(34, 56);
-            List<SpotifyItemDto> items = getSpotifyPlaylistData(playlistId).getSpotifyItemDtoList();
-
-            for (SpotifyItemDto item : items) {
-                TrackDto trackDtoList = item.getTrackDtoList();
-                String musicName = trackDtoList.getArtistDtoList().get(0).getName() + " - " + trackDtoList.getName();
-                musicDtos.add(new MusicDto(musicName, null));
-            }
-        // Track URL
-        } else if (spotifyUrl.matches("https://open\\.spotify\\.com.*/track/.*")) {
-            int idIndex = spotifyUrl.indexOf("track/") + 6;
-            String trackId = spotifyUrl.substring(idIndex, idIndex + 22);
-            SpotifyTrackResponse spotifyTrackResponse = getSpotifyTrackData(trackId);
-            String musicName = spotifyTrackResponse.getArtistDtoList().get(0).getName() + " - " + spotifyTrackResponse.getSongName();
-            String externalUrl = spotifyTrackResponse.getExternalUrls().getSpotify();
-            musicDtos.add(new MusicDto(musicName, null, externalUrl));
-        }
-
-        return musicDtos;
     }
 
     public List<MusicDto> getTopTracksFromArtist(String artist, int amount) {

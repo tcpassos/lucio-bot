@@ -6,14 +6,14 @@ import com.discord.bot.service.MessageService;
 
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.user.UserActivityStartEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-public class ActivityListener extends ListenerAdapter {
+public class ActivityListener extends BaseGuildListener {
 
     final MessageService messageService;
     final GuildConfigRepository guildConfigRepository;
 
     public ActivityListener(MessageService messageService, GuildConfigRepository guildConfigRepository) {
+        super(guildConfigRepository);
         this.messageService = messageService;
         this.guildConfigRepository = guildConfigRepository;
     }

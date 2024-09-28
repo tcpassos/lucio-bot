@@ -9,14 +9,14 @@ import com.discord.bot.service.MessageService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-public class ModalInteractionListener extends ListenerAdapter {
+public class ModalInteractionListener extends BaseGuildListener {
 
     private final MessageService messageService;
     private final GuildConfigRepository guildConfigRepository;
 
     public ModalInteractionListener(MessageService messageService, GuildConfigRepository guildConfigRepository) {
+        super(guildConfigRepository);
         this.messageService = messageService;
         this.guildConfigRepository = guildConfigRepository;
     }

@@ -1,27 +1,31 @@
 package com.discord.bot.listeners;
 
+import java.awt.Color;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.discord.bot.entity.GuildConfig;
 import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
-import lombok.AllArgsConstructor;
+
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
-
-@AllArgsConstructor
-public class EntitySelectInteractionListener extends ListenerAdapter {
+public class EntitySelectInteractionListener extends BaseGuildListener {
 
     private final MessageService messageService;
     private final GuildConfigRepository guildConfigRepository;
+
+    public EntitySelectInteractionListener(MessageService messageService, GuildConfigRepository guildConfigRepository) {
+        super(guildConfigRepository);
+        this.messageService = messageService;
+        this.guildConfigRepository = guildConfigRepository;
+    }
 
     @Override
     public void onEntitySelectInteraction(@NotNull EntitySelectInteractionEvent event) {

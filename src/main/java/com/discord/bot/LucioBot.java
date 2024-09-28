@@ -20,7 +20,7 @@ import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.MusicService;
-import com.discord.bot.service.RestService;
+import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.SpotifyTokenService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -38,7 +38,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 @EnableScheduling
 public class LucioBot {
     private final static Logger logger = LoggerFactory.getLogger(LucioBot.class);
-    final RestService restService;
+    final YoutubeService restService;
     final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
     final MusicService musicService;
@@ -60,7 +60,7 @@ public class LucioBot {
     @Value("${discord.bot.language}")
     private String botLanguage;
 
-    public LucioBot(RestService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
+    public LucioBot(YoutubeService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
                     MusicService musicService, MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
                     MessageService messageService, SfxService sfxService,
                     GuildConfigRepository guildConfigRepository) {

@@ -8,7 +8,7 @@ import com.discord.bot.commands.ISlashCommand;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicService;
-import com.discord.bot.service.RestService;
+import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 
@@ -19,7 +19,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 public class FillCommand implements ISlashCommand {
 
     MessageService messageService;
-    RestService restService;
+    YoutubeService restService;
     SpotifyService spotifyService;
     MusicService musicService;
     PlayerManagerService playerManagerService;
@@ -42,7 +42,7 @@ public class FillCommand implements ISlashCommand {
         }
         
         var recommendations = spotifyService.getRecommendationsForTrackDtos(queueTracks, amount);
-        var songs = restService.getYoutubeUrl(recommendations, event.getGuild().getIdLong());
+        var songs = restService.getYoutubeUrl(recommendations);
         if (songs.getCount() == 0) {
             event.getHook().sendMessageEmbeds(messageService.getEmbed("api.youtube.limit").setColor(Color.RED).build())
                  .setEphemeral(true)
