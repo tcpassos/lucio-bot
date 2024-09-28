@@ -14,11 +14,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.discord.bot.audioplayer.GuildPlaybackManager;
+import com.discord.bot.audioplayer.SpotifyToYoutubeSourceManager;
 import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.entity.Music;
 import com.discord.bot.repository.MusicRepository;
 import com.discord.bot.service.MessageService;
+import com.discord.bot.service.SpotifyService;
+import com.discord.bot.service.YoutubeService;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -41,28 +44,35 @@ public class PlayerManagerService {
     private final static Logger logger = LoggerFactory.getLogger(PlayerManagerService.class);
     private final ConcurrentMap<Long, GuildPlaybackManager> musicManagers;
     private final AudioPlayerManager audioPlayerManager;
+    
     private final MusicRepository musicRepository;
     private final MessageService messageService;
+    private final YoutubeService youtubeService;
+    private final SpotifyService spotifyService;
 
     @Value("${youtube.api.refresh-token}")
     private String refreshToken;
 
-    public PlayerManagerService(MusicRepository musicRepository, MessageService messageService) {
+    public PlayerManagerService(MusicRepository musicRepository, MessageService messageService, YoutubeService youtubeService, SpotifyService spotifyService) {
         this.musicManagers = new ConcurrentHashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
+        this.musicRepository = musicRepository;
+        this.messageService = messageService;
+        this.youtubeService = youtubeService;
+        this.spotifyService = spotifyService;
 
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
-        YoutubeAudioSourceManager yt = new YoutubeAudioSourceManager(true);
-        // yt.useOauth2(refreshToken, true);
-        // yt.useOauth2(null, false);
-        this.audioPlayerManager.registerSourceManager(yt);
-
+        YoutubeAudioSourceManager youtubeSourceManager = new YoutubeAudioSourceManager(true);
+        // youtubeSourceManager.useOauth2(refreshToken, true);
+        youtubeSourceManager.useOauth2(null, false);
+        SpotifyToYoutubeSourceManager spotifyToYoutubeSourceManager = new SpotifyToYoutubeSourceManager(youtubeSourceManager, this.spotifyService, this.youtubeService);
+        
+        this.audioPlayerManager.registerSourceManager(youtubeSourceManager);
+        this.audioPlayerManager.registerSourceManager(spotifyToYoutubeSourceManager);
         this.audioPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
 
         AudioSourceManagers.registerRemoteSources(this.audioPlayerManager);
         AudioSourceManagers.registerLocalSource(this.audioPlayerManager);
-        this.musicRepository = musicRepository;
-        this.messageService = messageService;
     }
 
     public GuildPlaybackManager getPlaybackManager(Guild guild) {
