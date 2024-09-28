@@ -20,7 +20,7 @@ public class ResumeCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             playerManagerService.getPlaybackManager(event.getGuild()).musicPlayer.setPaused(false);
             embedBuilder.setDescription(messageService.getMessage("bot.song.resumed")).setColor(Color.GREEN);
         } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);

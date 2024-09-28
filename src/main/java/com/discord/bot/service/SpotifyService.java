@@ -74,12 +74,12 @@ public class SpotifyService {
         return getRecommendations(new ArrayList<>(trackSet), SeedType.TRACK, amount);
     }
 
-    public List<MusicDto> getRecommendationsForTrackDtos(List<MusicDto> musicDtos, int amount) {
-        Set<String> trackIds = musicDtos.stream()
-            .limit(5 /* Max seeds */)
-            .map(musicDto -> searchTrack(musicDto.getTitle()))
+    public List<MusicDto> getRecommendationsForTrackNames(List<String> trackNames, int amount) {
+        Set<String> trackIds = trackNames.stream()
+            .map(this::searchTrack)
             .flatMap(Optional::stream)
             .map(TrackDto::getId)
+            .limit(5 /* Max seeds */)
             .collect(Collectors.toSet());
     
         return getRecommendations(new ArrayList<>(trackIds), SeedType.TRACK, amount);
@@ -141,7 +141,7 @@ public class SpotifyService {
     }
 
     public SpotifyPlaylistResponse getSpotifyPlaylistData(String playlistId) {
-        String url = "https://api.spotify.com/v1/playlists/" + playlistId + "?fields=name,tracks.items";
+        String url = "https://api.spotify.com/v1/playlists/" + playlistId + "?fields=name,external_urls,tracks.items";
         return getSpotifyData(url, SpotifyPlaylistResponse.class);
     }
 

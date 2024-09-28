@@ -20,7 +20,7 @@ public class LoopCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             boolean repeat = playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.repeating;
             playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.repeating = !repeat;
 

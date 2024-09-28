@@ -22,7 +22,7 @@ public class NowPlayingCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             AudioTrack track = playerManagerService.getPlaybackManager(event.getGuild()).musicPlayer.getPlayingTrack();
 
             if (track != null) {

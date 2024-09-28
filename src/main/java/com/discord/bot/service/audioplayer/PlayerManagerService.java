@@ -1,6 +1,5 @@
 package com.discord.bot.service.audioplayer;
 
-import java.awt.Color;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -9,17 +8,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.audioplayer.SpotifyToYoutubeSourceManager;
-import com.discord.bot.dto.MultipleMusicDto;
+import com.discord.bot.audioplayer.TrackScheduler;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.entity.Music;
 import com.discord.bot.repository.MusicRepository;
 import com.discord.bot.service.MessageService;
+import com.discord.bot.service.MusicCommandUtils;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.YoutubeService;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
@@ -36,6 +35,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
@@ -49,17 +49,23 @@ public class PlayerManagerService {
     private final MessageService messageService;
     private final YoutubeService youtubeService;
     private final SpotifyService spotifyService;
+    private final SfxService sfxService;
+    private final MusicCommandUtils utils;
 
     @Value("${youtube.api.refresh-token}")
     private String refreshToken;
 
-    public PlayerManagerService(MusicRepository musicRepository, MessageService messageService, YoutubeService youtubeService, SpotifyService spotifyService) {
+    public PlayerManagerService(MusicRepository musicRepository, MessageService messageService, YoutubeService youtubeService,
+                                SpotifyService spotifyService, SfxService sfxService, MusicCommandUtils utils) {
         this.musicManagers = new ConcurrentHashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
         this.musicRepository = musicRepository;
         this.messageService = messageService;
         this.youtubeService = youtubeService;
         this.spotifyService = spotifyService;
+        this.sfxService = sfxService;
+        this.utils = utils;
+
 
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager youtubeSourceManager = new YoutubeAudioSourceManager(true);
@@ -87,20 +93,21 @@ public class PlayerManagerService {
         });
     }
 
-    public void loadAndPlay(SlashCommandInteractionEvent event, MusicDto musicDto) {
+    public void loadAndPlayMusic(SlashCommandInteractionEvent event, MusicDto musicDto) {
         final GuildPlaybackManager musicManager = this.getPlaybackManager(event.getGuild());
-        EmbedBuilder embedBuilder = new EmbedBuilder();
         this.audioPlayerManager.loadItemOrdered(musicManager, musicDto.getReference(), new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 String trackUrl = track.getInfo().uri;
-                embedBuilder.setDescription(messageService.getMessage("bot.queue.added.song", "[" + track.getInfo().title + "](" + trackUrl + ")", musicManager.musicScheduler.queue.size() + 1))
-                            .setColor(Color.GREEN);
-                event.getHook().sendMessageEmbeds(embedBuilder.build())
-                        .setEphemeral(true)
-                        .queue();
+                event.getHook().sendMessage(messageService.getMessage("bot.queue.added.song", track.getInfo().title, trackUrl))
+                     .setEphemeral(false)
+                     .queue();
 
-                musicManager.musicScheduler.queue(track);
+                if ((musicManager.musicScheduler.queue(track)).equals(TrackScheduler.QueueEvent.TRACK_STARTED)) {
+                    var channel = event.getMember().getVoiceState().getChannel();
+                    loadAndPlaySfx(channel, sfxService.getSound(SfxType.MUSIC_START));
+                }
+
                 saveTrack(track, musicDto.getTitle());
             }
 
@@ -108,85 +115,36 @@ public class PlayerManagerService {
             public void playlistLoaded(AudioPlaylist playlist) {
                 List<AudioTrack> tracks = playlist.getTracks();
 
-                for (AudioTrack track : tracks) {
-                    musicManager.musicScheduler.queue(track);
+                if (musicManager.musicScheduler.queueAll(tracks).equals(TrackScheduler.QueueEvent.TRACK_STARTED)) {
+                    var channel = event.getMember().getVoiceState().getChannel();
+                    loadAndPlaySfx(channel, sfxService.getSound(SfxType.MUSIC_START));
                 }
-                event.getHook().sendMessageEmbeds(new EmbedBuilder()
-                                .setDescription(messageService.getMessage("bot.queue.added.playlist", tracks.size()))
-                                .setColor(Color.GREEN)
-                                .build())
-                        .setEphemeral(true)
-                        .queue();
+
+                event.getHook().sendMessage(messageService.getMessage("bot.queue.added.playlist", playlist.getName()))
+                               .setEphemeral(false)
+                               .queue();
             }
 
             @Override
             public void noMatches() {
                 logger.warn("No match is found for: {}", musicDto.getReference());
-                embedBuilder.setDescription(messageService.getMessage("bot.song.nomatches"))
-                            .setColor(Color.RED);
-                event.getHook().sendMessageEmbeds(embedBuilder.build())
-                        .setEphemeral(true)
-                        .queue();
+                event.getHook().sendMessageEmbeds(messageService.getEmbedError("bot.song.nomatches").build())
+                     .setEphemeral(true)
+                     .queue();
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
                 logger.error("Track load failed.", exception);
-                embedBuilder.setDescription(messageService.getMessage("bot.song.loadfailed", exception.getMessage()))
-                            .setColor(Color.RED);
-                event.getHook().sendMessageEmbeds(embedBuilder.build())
-                        .setEphemeral(true)
-                        .queue();
+                event.getHook().sendMessageEmbeds(messageService.getEmbedError("bot.song.loadfailed", exception.getMessage()).build())
+                     .setEphemeral(true)
+                     .queue();
             }
         });
     }
 
-    @Async
-    public void loadMultipleAndPlay(SlashCommandInteractionEvent event, MultipleMusicDto multipleMusicDto) {
-        final GuildPlaybackManager audioManager = this.getPlaybackManager(event.getGuild());
-
-        if (multipleMusicDto.getFailCount() > 0) {
-            event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.queue.added.songs.partial", multipleMusicDto.getCount(), multipleMusicDto.getFailCount())
-                                                            .setColor(Color.ORANGE)
-                                                            .build())
-                    .setEphemeral(true)
-                    .queue();
-        } else {
-            event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.queue.added.songs", multipleMusicDto.getCount())
-                                                            .setColor(Color.GREEN)
-                                                            .build())
-                           .setEphemeral(true)
-                           .queue();
-        }
-
-        for (MusicDto musicDto : multipleMusicDto.getMusicDtoList()) {
-            this.audioPlayerManager.loadItemOrdered(audioManager, musicDto.getReference(), new AudioLoadResultHandler() {
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    audioManager.musicScheduler.queue(track);
-                    saveTrack(track, musicDto.getTitle());
-                }
-
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    //
-                }
-
-                @Override
-                public void noMatches() {
-                    logger.warn("No match is found.");
-                }
-
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    logger.error("Track load failed.", exception);
-                }
-            });
-        }
-    }
-
     public void loadAndPlaySfx(@NonNull AudioChannel channel, @NonNull String reference) {
-        joinVoiceChannel(channel);
+        joinAudioChannel(channel);
         GuildPlaybackManager playbackManager = getPlaybackManager(channel.getGuild());
         audioPlayerManager.loadItem(reference, new AudioLoadResultHandler() {
             @Override
@@ -211,7 +169,19 @@ public class PlayerManagerService {
         });
     }
 
-    public boolean joinVoiceChannel(AudioChannel audioChannel) {
+    public boolean joinAudioChannel(SlashCommandInteractionEvent event) {
+        try {
+            tryJoinAudioChannel(event);
+            return true;
+        } catch (Exception e) {
+            event.getHook().sendMessageEmbeds(new EmbedBuilder().setDescription(e.getMessage()).build())
+                 .setEphemeral(true)
+                 .queue();
+        }
+        return false;
+    }
+
+    public boolean joinAudioChannel(AudioChannel audioChannel) {
         Guild guild = audioChannel.getGuild();
         AudioManager audioManager = guild.getAudioManager();
         var playerbackManager = getPlaybackManager(guild);
@@ -224,6 +194,45 @@ public class PlayerManagerService {
         audioManager.openAudioConnection(audioChannel);
         audioManager.setSendingHandler(playerbackManager.getSendHandler());
         return true;
+    }
+
+    public void tryJoinAudioChannel(SlashCommandInteractionEvent event) throws Exception {
+        AudioChannel userChannel = getAudioChannel(event, false);
+        AudioChannel botChannel = getAudioChannel(event, true);
+    
+        // User is not in a voice channel
+        if (userChannel == null) {
+            throw new Exception(messageService.getMessage("bot.user.notinvoice"));
+        }
+        // If bot is not in a voice channel, join the user's voice channel
+        if (botChannel == null) {
+            utils.playerCleaner(getPlaybackManager(event.getGuild()));
+            if (!joinAudioChannel(userChannel)) {
+                throw new Exception(messageService.getMessage("bot.voice.notallowed"));
+            }
+            botChannel = userChannel;
+        }
+        // Bot is in a different voice channel
+        if (!botChannel.equals(userChannel)) {
+            throw new Exception(messageService.getMessage("bot.user.notinsamevoice"));
+        }
+    }
+
+    private AudioChannel getAudioChannel(SlashCommandInteractionEvent event, boolean self) {
+        AudioChannelUnion audioChannel = null;
+
+        var member = event.getMember();
+        if (member != null) {
+            if (self) {
+                member = member.getGuild().getSelfMember();
+            }
+            var voiceState = member.getVoiceState();
+            if (voiceState != null) {
+                audioChannel = voiceState.getChannel();
+            }
+        }
+
+        return audioChannel;
     }
 
     private void saveTrack(AudioTrack track, String title) {

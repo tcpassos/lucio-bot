@@ -25,7 +25,7 @@ public class VolumeCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
         
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             AudioPlayer musicPlayer = playerManagerService.getPlaybackManager(event.getGuild()).musicPlayer;
             var volumeOption = event.getOption("volume");
 

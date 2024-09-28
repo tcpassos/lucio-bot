@@ -22,7 +22,7 @@ public class LeaveCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             GuildPlaybackManager musicManager = playerManagerService.getPlaybackManager(event.getGuild());
             @SuppressWarnings("DataFlowIssue")
             AudioManager audioManager = event.getGuild().getAudioManager();

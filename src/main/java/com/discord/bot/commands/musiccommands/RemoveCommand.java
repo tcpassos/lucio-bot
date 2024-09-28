@@ -26,7 +26,7 @@ public class RemoveCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             GuildPlaybackManager musicManager = playerManagerService.getPlaybackManager(event.getGuild());
             var queue = musicManager.musicScheduler.queue;
 

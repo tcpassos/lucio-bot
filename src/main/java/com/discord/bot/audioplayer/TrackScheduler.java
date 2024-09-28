@@ -32,14 +32,15 @@ public class TrackScheduler extends AudioEventAdapter {
      *
      * @param track The track to be queued.
      */
-    public void queue(AudioTrack track) {
+    public QueueEvent queue(AudioTrack track) {
         if (this.player.startTrack(track, true)) {
-            return; // Track started immediately
+            return QueueEvent.TRACK_STARTED;
         }
-        boolean offerSuccess = this.queue.offer(track);
-        if (!offerSuccess) {
+        if (!this.queue.offer(track)) {
             logger.error("Queue is full, could not add track: " + track.getInfo().title);
+            return QueueEvent.QUEUE_FULL;
         }
+        return QueueEvent.TRACK_ADDED;
     }
 
     /**
@@ -47,17 +48,21 @@ public class TrackScheduler extends AudioEventAdapter {
      *
      * @param tracks The list of tracks to be queued.
      */
-    public void queueAll(List<AudioTrack> tracks) {
-        for (AudioTrack track : tracks) {
-            if (!this.player.startTrack(track, true)) {
-                boolean offerSuccess = this.queue.offer(track);
+    public QueueEvent queueAll(List<AudioTrack> tracks) {
+        boolean trackStarted = false;
 
-                if (!offerSuccess) {
+        for (AudioTrack track : tracks) {
+            if (this.player.startTrack(track, true)) {
+                trackStarted = true;
+            } else {
+                if (!this.queue.offer(track)) {
                     logger.error("Queue is full, could not add track and tracks after: " + track.getInfo().title);
-                    break;
+                    return QueueEvent.QUEUE_FULL;
                 }
             }
         }
+
+        return trackStarted ? QueueEvent.TRACK_STARTED : QueueEvent.TRACK_ADDED;
     }
 
     /**
@@ -89,5 +94,12 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
         logger.error("Error occurred while playing track: {}", track.getInfo().title, exception);
         nextTrack();
+    }
+
+    public enum QueueEvent {
+        TRACK_ADDED,
+        TRACK_STARTED,
+        PLAYLIST_ADDED,
+        QUEUE_FULL
     }
 }

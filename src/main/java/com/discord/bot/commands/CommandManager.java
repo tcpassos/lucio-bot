@@ -39,7 +39,6 @@ import com.discord.bot.listeners.BaseGuildListener;
 import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
-import com.discord.bot.service.MusicService;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
@@ -55,7 +54,6 @@ public class CommandManager extends BaseGuildListener {
     final YoutubeService restService;
     final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
-    final MusicService musicService;
     final MessageService messageService;
     final SfxService sfxService;
     final MusicCommandUtils musicCommandUtils;
@@ -64,13 +62,12 @@ public class CommandManager extends BaseGuildListener {
     private Map<String, ISlashCommand> commandsMap;
 
     public CommandManager(YoutubeService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
-                          MusicService musicService, MessageService messageService, SfxService sfxService,
+                          MessageService messageService, SfxService sfxService,
                           MusicCommandUtils musicCommandUtils, GuildConfigRepository guildConfigRepository, String adminUserId) {
         super(guildConfigRepository);
         this.restService = restService;
         this.spotifyService = spotifyService;
         this.playerManagerService = playerManagerService;
-        this.musicService = musicService;
         this.messageService = messageService;
         this.sfxService = sfxService;
         this.musicCommandUtils = musicCommandUtils;
@@ -120,7 +117,7 @@ public class CommandManager extends BaseGuildListener {
         commandsMap.put("guilds", new GuildsCommand(adminUserId));
         commandsMap.put("logs", new LogsCommand(adminUserId));
         // Music commands
-        commandsMap.put("play", new PlayCommand(messageService, restService, spotifyService, musicService));
+        commandsMap.put("play", new PlayCommand(messageService, restService, spotifyService, playerManagerService));
         commandsMap.put("skip", new SkipCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("forward", new ForwardCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("rewind", new RewindCommand(playerManagerService, messageService, musicCommandUtils));
@@ -132,9 +129,9 @@ public class CommandManager extends BaseGuildListener {
         commandsMap.put("shuffle", new ShuffleCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("loop", new LoopCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("remove", new RemoveCommand(playerManagerService, messageService, musicCommandUtils));
-        commandsMap.put("top", new TopCommand(messageService, restService, spotifyService, musicService));
-        commandsMap.put("fill", new FillCommand(messageService, restService, spotifyService, musicService, playerManagerService));
-        commandsMap.put("mix", new MixCommand(messageService, restService, spotifyService, musicService));
+        commandsMap.put("top", new TopCommand(messageService, restService, spotifyService, playerManagerService));
+        commandsMap.put("fill", new FillCommand(messageService, restService, spotifyService, playerManagerService));
+        commandsMap.put("mix", new MixCommand(messageService, restService, spotifyService, playerManagerService));
         commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("volume", new VolumeCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());

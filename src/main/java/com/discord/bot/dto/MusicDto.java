@@ -12,10 +12,4 @@ import lombok.Setter;
 public class MusicDto {
     private String title;
     private String reference;
-    private String originalUrl;
-
-    public MusicDto(String title, String reference) {
-        this.title = title;
-        this.reference = reference;
-    }
 }

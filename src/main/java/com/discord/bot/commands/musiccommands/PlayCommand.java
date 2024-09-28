@@ -1,15 +1,11 @@
 package com.discord.bot.commands.musiccommands;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.discord.bot.commands.ISlashCommand;
-import com.discord.bot.dto.MultipleMusicDto;
 import com.discord.bot.dto.MusicDto;
 import com.discord.bot.service.MessageService;
-import com.discord.bot.service.MusicService;
-import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
+import com.discord.bot.service.YoutubeService;
+import com.discord.bot.service.audioplayer.PlayerManagerService;
 
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,59 +13,43 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 @AllArgsConstructor
 public class PlayCommand implements ISlashCommand {
     MessageService messageService;
-    YoutubeService restService;
+    YoutubeService youtubeService;
     SpotifyService spotifyService;
-    MusicService musicService;
+    PlayerManagerService playerManagerService;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         var queryOption = event.getOption("query");
         event.deferReply().queue();
     
-        if (queryOption == null) {
-            event.getHook().sendMessageEmbeds(messageService.getEmbedError("api.youtube.limit").build())
-                           .setEphemeral(true)
-                           .queue();
-            return;
-        }
-    
         String query = queryOption.getAsString().trim();
-        MultipleMusicDto multipleMusicDto = getSongUrl(query);
+        var music = getMusicFromUrl(query);
     
-        if (multipleMusicDto.getCount() == 0) {
+        if (music == null) {
             event.getHook().sendMessageEmbeds(messageService.getEmbedError("api.youtube.limit").build())
                            .setEphemeral(true)
                            .queue();
             return;
         }
     
-        if (multipleMusicDto.getCount() == 1) {
-            MusicDto musicDto = multipleMusicDto.getMusicDtoList().get(0);
-            String originalUrl = musicDto.getOriginalUrl() != null ? musicDto.getOriginalUrl() : query;
-            String message = (musicDto.getTitle() == null) 
-                ? String.format("Adicionando à fila :musical_note: %s :musical_note:", originalUrl)
-                : String.format("Adicionando à fila :musical_note: [%s](%s) :musical_note:", musicDto.getTitle(), originalUrl);
-    
-            event.getHook().sendMessage(message).queue();
-        } else if (query.startsWith("https://open.spotify.com/playlist/")) {
-            String message = String.format("Adicionando à fila :musical_note: %s :musical_note:", query);
-            event.getHook().sendMessage(message).queue();
+        if (playerManagerService.joinAudioChannel(event)) {
+            playerManagerService.loadAndPlayMusic(event, music);
         }
-    
-        musicService.playMusic(event, multipleMusicDto);
     }
 
-    private MultipleMusicDto getSongUrl(String query) {
-        List<MusicDto> musicDtos = new ArrayList<>();
-
+    private MusicDto getMusicFromUrl(String query) {
         if (query.contains("https://www.youtube.com/shorts/")) {
-            query = youtubeShortsToVideo(query);
+            // Convert shorts link to watch link
+            query = query.replace("shorts/", "watch?v=");
         }
         if (isSupportedUrl(query)) {
-            musicDtos.add(new MusicDto(null, query, query));
-            return new MultipleMusicDto(1, musicDtos, 0);
+            return new MusicDto(null, query);
         }
-        return restService.getYoutubeUrl(musicDtos);
+        String url = youtubeService.searchVideoUrl(query);
+        if (url != null) {
+            return new MusicDto(null, url);
+        }
+        return null;
     }
 
     private boolean isSupportedUrl(String url) {
@@ -82,9 +62,5 @@ public class PlayCommand implements ISlashCommand {
                 || url.contains("https://www.twitch.tv/")
                 || url.contains("https://soundcloud.com/")
         );
-    }
-
-    private String youtubeShortsToVideo(String url) {
-        return url.replace("shorts/", "watch?v=");
     }
 }

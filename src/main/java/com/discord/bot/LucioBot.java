@@ -19,7 +19,6 @@ import com.discord.bot.listeners.ModalInteractionListener;
 import com.discord.bot.repository.GuildConfigRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
-import com.discord.bot.service.MusicService;
 import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.SpotifyTokenService;
@@ -41,7 +40,6 @@ public class LucioBot {
     final YoutubeService restService;
     final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
-    final MusicService musicService;
     final MusicCommandUtils musicCommandUtils;
     final SpotifyTokenService spotifyTokenService;
     final MessageService messageService;
@@ -61,13 +59,12 @@ public class LucioBot {
     private String botLanguage;
 
     public LucioBot(YoutubeService restService, SpotifyService spotifyService, PlayerManagerService playerManagerService,
-                    MusicService musicService, MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
+                    MusicCommandUtils musicCommandUtils, SpotifyTokenService spotifyTokenService,
                     MessageService messageService, SfxService sfxService,
                     GuildConfigRepository guildConfigRepository) {
         this.restService = restService;
         this.spotifyService = spotifyService;
         this.playerManagerService = playerManagerService;
-        this.musicService = musicService;
         this.musicCommandUtils = musicCommandUtils;
         this.spotifyTokenService = spotifyTokenService;
         this.messageService = messageService;
@@ -89,7 +86,7 @@ public class LucioBot {
                 .enableCache(CacheFlag.ACTIVITY)
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .addEventListeners(
-                    new CommandManager(restService, spotifyService, playerManagerService, musicService,
+                    new CommandManager(restService, spotifyService, playerManagerService,
                                        messageService, sfxService, musicCommandUtils, guildConfigRepository, adminUserId),
                     new ActivityListener(messageService, guildConfigRepository),
                     new ModalInteractionListener(messageService, guildConfigRepository),

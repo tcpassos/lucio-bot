@@ -13,24 +13,24 @@ import java.util.concurrent.BlockingQueue;
 
 @Component
 public class MusicCommandUtils {
-    public boolean channelControl(SlashCommandInteractionEvent event) {
+
+    public boolean isSameAudioChannel(SlashCommandInteractionEvent event) {
         var guild = event.getGuild();
-
-        if (guild != null && event.getMember() != null) {
-            GuildVoiceState selfVoiceState = guild.getSelfMember().getVoiceState();
-            GuildVoiceState memberVoiceState = event.getMember().getVoiceState();
-            if (selfVoiceState != null && memberVoiceState != null) {
-                if (!selfVoiceState.inAudioChannel()) {
-                    return false;
-                }
-                if (!memberVoiceState.inAudioChannel()) {
-                    return false;
-                }
-
-                return memberVoiceState.getChannel() == selfVoiceState.getChannel();
-            }
+        var member = event.getMember();
+    
+        if (guild == null || member == null) {
+            return false;
         }
-        return false;
+    
+        GuildVoiceState selfVoiceState = guild.getSelfMember().getVoiceState();
+        GuildVoiceState memberVoiceState = member.getVoiceState();
+    
+        if (selfVoiceState == null || memberVoiceState == null) {
+            return false;
+        }
+    
+        return selfVoiceState.inAudioChannel() && memberVoiceState.inAudioChannel() &&
+               selfVoiceState.getChannel().equals(memberVoiceState.getChannel());
     }
 
     public EmbedBuilder queueBuilder(EmbedBuilder embedBuilder, int page, BlockingQueue<AudioTrack> queue, List<AudioTrack> trackList) {
@@ -45,11 +45,6 @@ public class MusicCommandUtils {
         }
 
         return embedBuilder;
-    }
-
-    public boolean isEphemeralOptionEnabled(SlashCommandInteractionEvent event) {
-        var ephemeralOption = event.getOption("ephemeral");
-        return ephemeralOption == null || ephemeralOption.getAsBoolean();
     }
 
     public void playerCleaner(GuildPlaybackManager musicManager) {

@@ -24,7 +24,7 @@ public class SwapCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             GuildPlaybackManager musicManager = playerManagerService.getPlaybackManager(event.getGuild());
             List<AudioTrack> trackList = new ArrayList<>(musicManager.musicScheduler.queue);
             var firstOption = event.getOption("songnum1");

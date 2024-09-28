@@ -1,8 +1,8 @@
 package com.discord.bot.commands.musiccommands;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.discord.bot.commands.ISlashCommand;
@@ -10,9 +10,9 @@ import com.discord.bot.dto.MusicDto;
 import com.discord.bot.dto.response.spotify.ArtistDto;
 import com.discord.bot.dto.response.spotify.TrackDto;
 import com.discord.bot.service.MessageService;
-import com.discord.bot.service.MusicService;
-import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
+import com.discord.bot.service.YoutubeService;
+import com.discord.bot.service.audioplayer.PlayerManagerService;
 
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -23,9 +23,9 @@ public class MixCommand implements ISlashCommand {
     public static final String[] genres = {"acoustic", "afrobeat", "alt-rock", "alternative", "ambient", "anime", "black-metal", "bluegrass", "blues", "bossanova", "brazil", "breakbeat", "british", "cantopop", "chicago-house", "children", "chill", "classical", "club", "comedy", "country", "dance", "dancehall", "death-metal", "deep-house", "detroit-techno", "disco", "disney", "drum-and-bass", "dub", "dubstep", "edm", "electro", "electronic", "emo", "folk", "forro", "french", "funk", "garage", "german", "gospel", "goth", "grindcore", "groove", "grunge", "guitar", "happy", "hard-rock", "hardcore", "hardstyle", "heavy-metal", "hip-hop", "holidays", "honky-tonk", "house", "idm", "indian", "indie", "indie-pop", "industrial", "iranian", "j-dance", "j-idol", "j-pop", "j-rock", "jazz", "k-pop", "kids", "latin", "latino", "malay", "mandopop", "metal", "metal-misc", "metalcore", "minimal-techno", "movies", "mpb", "new-age", "new-release", "opera", "pagode", "party", "philippines-opm", "piano", "pop", "pop-film", "post-dubstep", "power-pop", "progressive-house", "psych-rock", "punk", "punk-rock", "r-n-b", "rainy-day", "reggae", "reggaeton", "road-trip", "rock", "rock-n-roll", "rockabilly", "romance", "sad", "salsa", "samba", "sertanejo", "show-tunes", "singer-songwriter", "ska", "sleep", "songwriter", "soul", "soundtracks", "spanish", "study", "summer", "swedish", "synth-pop", "tango", "techno", "trance", "trip-hop", "turkish", "work-out", "world-music"};
 
     MessageService messageService;
-    YoutubeService restService;
+    YoutubeService youtubeService;
     SpotifyService spotifyService;
-    MusicService musicService;
+    PlayerManagerService playerManagerService;
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
@@ -41,15 +41,23 @@ public class MixCommand implements ISlashCommand {
             default -> new ArrayList<>();
         };
         
-        var songs = restService.getYoutubeUrl(recommendations);
-        if (songs.getCount() == 0) {
-            event.getHook().sendMessageEmbeds(messageService.getEmbed("bot.song.nomatches").setColor(Color.RED).build())
+        var songs = recommendations.stream()
+                                   .map(music -> music.getTitle())
+                                   .map(youtubeService::searchVideoUrl)
+                                   .filter(Objects::nonNull)
+                                   .toList();
+        if (songs.isEmpty()) {
+            event.getHook().sendMessageEmbeds(messageService.getEmbedError("bot.song.nomatches").build())
                  .setEphemeral(true)
                  .queue();
             return;
         }
 
-        musicService.playMusic(event, songs);
+        if (playerManagerService.joinAudioChannel(event)) {
+            for (String song : songs) {
+                playerManagerService.loadAndPlayMusic(event, new MusicDto(null, song));
+            }
+        }
     }
 
     private List<MusicDto> getRecommendationsForArtists(SlashCommandInteractionEvent event, int amount) {

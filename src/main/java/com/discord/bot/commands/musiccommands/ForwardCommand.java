@@ -20,7 +20,7 @@ public class ForwardCommand implements ISlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             var track = playerManagerService.getPlaybackManager(event.getGuild()).musicPlayer.getPlayingTrack();
             var option = event.getOption("sec");
             var seconds = option != null ? option.getAsInt() : 0;

@@ -22,7 +22,7 @@ public class SkipCommand implements ISlashCommand {
         var ephemeralOption = event.getOption("ephemeral");
         boolean ephemeral = ephemeralOption == null || ephemeralOption.getAsBoolean();
 
-        if (utils.channelControl(event)) {
+        if (utils.isSameAudioChannel(event)) {
             playerManagerService.getPlaybackManager(event.getGuild()).musicScheduler.nextTrack();
             embedBuilder.setDescription(messageService.getMessage("bot.song.skipped")).setColor(Color.GREEN);
         } else embedBuilder.setDescription(messageService.getMessage("bot.user.notinsamevoice")).setColor(Color.RED);
