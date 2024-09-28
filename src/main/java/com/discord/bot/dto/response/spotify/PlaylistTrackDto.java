@@ -11,9 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SpotifyPlaylistResponse {
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("tracks")
-    private PlaylistTracksDto tracks;
+public class PlaylistTrackDto {
+    @JsonProperty("track")
+    private TrackDto track;
 }

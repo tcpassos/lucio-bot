@@ -1,5 +1,7 @@
 package com.discord.bot.dto.response.spotify;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -11,9 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SpotifyPlaylistResponse {
-    @JsonProperty("name")
-    private String name;
-    @JsonProperty("tracks")
-    private PlaylistTracksDto tracks;
+public class PlaylistTracksDto {
+    @JsonProperty("items")
+    private List<PlaylistTrackDto> items;
 }

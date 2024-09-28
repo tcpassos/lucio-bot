@@ -141,7 +141,7 @@ public class SpotifyService {
     }
 
     public SpotifyPlaylistResponse getSpotifyPlaylistData(String playlistId) {
-        String url = "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks?fields=items(track(name,artists(name)))";
+        String url = "https://api.spotify.com/v1/playlists/" + playlistId + "?fields=name,tracks.items";
         return getSpotifyData(url, SpotifyPlaylistResponse.class);
     }
 

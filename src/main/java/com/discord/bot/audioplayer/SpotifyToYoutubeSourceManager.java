@@ -102,10 +102,11 @@ public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
         String playlistId = url.substring(idIndex, idIndex + 22);
         var playlistData = spotifyService.getSpotifyPlaylistData(playlistId);
         String playlistName = playlistData.getName();
-        List<TrackDto> items = playlistData.getTracks().getItems();
+        var playlistItems = playlistData.getTracks().getItems();
         List<AudioTrack> tracks = new ArrayList<>();
 
-        for (var track : items) {
+        for (var playListItem : playlistItems) {
+            TrackDto track = playListItem.getTrack();
             AudioTrackInfo spotifyTrackInfo = new AudioTrackInfo(
                 track.getName(),
                 track.getArtistDtoList().get(0).getName(),
