@@ -51,7 +51,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 
 public class CommandManager extends BaseGuildListener {
-    final YoutubeService restService;
+    final YoutubeService youtubeService;
     final SpotifyService spotifyService;
     final PlayerManagerService playerManagerService;
     final MessageService messageService;
@@ -65,7 +65,7 @@ public class CommandManager extends BaseGuildListener {
                           MessageService messageService, SfxService sfxService,
                           MusicCommandUtils musicCommandUtils, GuildConfigRepository guildConfigRepository, String adminUserId) {
         super(guildConfigRepository);
-        this.restService = restService;
+        this.youtubeService = restService;
         this.spotifyService = spotifyService;
         this.playerManagerService = playerManagerService;
         this.messageService = messageService;
@@ -117,7 +117,7 @@ public class CommandManager extends BaseGuildListener {
         commandsMap.put("guilds", new GuildsCommand(adminUserId));
         commandsMap.put("logs", new LogsCommand(adminUserId));
         // Music commands
-        commandsMap.put("play", new PlayCommand(messageService, restService, spotifyService, playerManagerService));
+        commandsMap.put("play", new PlayCommand(playerManagerService));
         commandsMap.put("skip", new SkipCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("forward", new ForwardCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("rewind", new RewindCommand(playerManagerService, messageService, musicCommandUtils));
@@ -129,9 +129,9 @@ public class CommandManager extends BaseGuildListener {
         commandsMap.put("shuffle", new ShuffleCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("loop", new LoopCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("remove", new RemoveCommand(playerManagerService, messageService, musicCommandUtils));
-        commandsMap.put("top", new TopCommand(messageService, restService, spotifyService, playerManagerService));
-        commandsMap.put("fill", new FillCommand(messageService, restService, spotifyService, playerManagerService));
-        commandsMap.put("mix", new MixCommand(messageService, restService, spotifyService, playerManagerService));
+        commandsMap.put("top", new TopCommand(messageService, spotifyService, playerManagerService));
+        commandsMap.put("fill", new FillCommand(messageService, spotifyService, playerManagerService));
+        commandsMap.put("mix", new MixCommand(messageService, spotifyService, playerManagerService));
         commandsMap.put("nowplaying", new NowPlayingCommand(playerManagerService, messageService, musicCommandUtils));
         commandsMap.put("volume", new VolumeCommand(playerManagerService, messageService, sfxService, musicCommandUtils));
         commandsMap.put("mhelp", new MusicHelpCommand());

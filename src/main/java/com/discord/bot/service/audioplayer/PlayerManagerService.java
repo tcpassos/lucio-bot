@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.audioplayer.SpotifyToYoutubeSourceManager;
 import com.discord.bot.audioplayer.TrackScheduler;
-import com.discord.bot.dto.MusicDto;
 import com.discord.bot.entity.Music;
 import com.discord.bot.repository.MusicRepository;
 import com.discord.bot.service.MessageService;
@@ -93,9 +92,20 @@ public class PlayerManagerService {
         });
     }
 
-    public void loadAndPlayMusic(SlashCommandInteractionEvent event, MusicDto musicDto) {
+    public void loadAndPlayMusic(SlashCommandInteractionEvent event, String query) {
+        String url = getMusicUrl(query);
+        if (url == null) {
+            url = youtubeService.searchVideoUrl(query);
+        }
+        if (url == null) {
+            event.getHook().sendMessageEmbeds(messageService.getEmbedError("api.youtube.limit").build())
+                           .setEphemeral(true)
+                           .queue();
+            return;
+        }
+
         final GuildPlaybackManager musicManager = this.getPlaybackManager(event.getGuild());
-        this.audioPlayerManager.loadItemOrdered(musicManager, musicDto.getReference(), new AudioLoadResultHandler() {
+        this.audioPlayerManager.loadItemOrdered(musicManager, url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 String trackUrl = track.getInfo().uri;
@@ -108,7 +118,7 @@ public class PlayerManagerService {
                     loadAndPlaySfx(channel, sfxService.getSound(SfxType.MUSIC_START));
                 }
 
-                saveTrack(track, musicDto.getTitle());
+                saveTrack(track, track.getInfo().author + " - " + track.getInfo().title);
             }
 
             @Override
@@ -127,7 +137,7 @@ public class PlayerManagerService {
 
             @Override
             public void noMatches() {
-                logger.warn("No match is found for: {}", musicDto.getReference());
+                logger.warn("No match is found for: {}", query);
                 event.getHook().sendMessageEmbeds(messageService.getEmbedError("bot.song.nomatches").build())
                      .setEphemeral(true)
                      .queue();
@@ -241,6 +251,29 @@ public class PlayerManagerService {
             Music dbMusic = musicRepository.findFirstByTitle(music.getTitle());
             if (dbMusic == null) musicRepository.save(music);
         }
+    }
+
+    private String getMusicUrl(String query) {
+        if (query.contains("https://www.youtube.com/shorts/")) {
+            // Convert shorts link to watch link
+            return query.replace("shorts/", "watch?v=");
+        }
+        if (isSupportedUrl(query)) {
+            return query;
+        }
+        return null;
+    }
+
+    private boolean isSupportedUrl(String url) {
+        return (url.contains("https://www.youtube.com/watch?v=")
+                || url.contains("https://youtu.be/")
+                || url.contains("https://youtube.com/playlist?list=")
+                || url.contains("https://open.spotify.com/")
+                || url.contains("https://music.youtube.com/watch?v=")
+                || url.contains("https://music.youtube.com/playlist?list=")
+                || url.contains("https://www.twitch.tv/")
+                || url.contains("https://soundcloud.com/")
+        );
     }
 
     @Scheduled(fixedRate = 10000)

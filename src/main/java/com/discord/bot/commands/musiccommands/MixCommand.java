@@ -2,16 +2,13 @@ package com.discord.bot.commands.musiccommands;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import com.discord.bot.commands.ISlashCommand;
-import com.discord.bot.dto.MusicDto;
 import com.discord.bot.dto.response.spotify.ArtistDto;
 import com.discord.bot.dto.response.spotify.TrackDto;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.SpotifyService;
-import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +20,6 @@ public class MixCommand implements ISlashCommand {
     public static final String[] genres = {"acoustic", "afrobeat", "alt-rock", "alternative", "ambient", "anime", "black-metal", "bluegrass", "blues", "bossanova", "brazil", "breakbeat", "british", "cantopop", "chicago-house", "children", "chill", "classical", "club", "comedy", "country", "dance", "dancehall", "death-metal", "deep-house", "detroit-techno", "disco", "disney", "drum-and-bass", "dub", "dubstep", "edm", "electro", "electronic", "emo", "folk", "forro", "french", "funk", "garage", "german", "gospel", "goth", "grindcore", "groove", "grunge", "guitar", "happy", "hard-rock", "hardcore", "hardstyle", "heavy-metal", "hip-hop", "holidays", "honky-tonk", "house", "idm", "indian", "indie", "indie-pop", "industrial", "iranian", "j-dance", "j-idol", "j-pop", "j-rock", "jazz", "k-pop", "kids", "latin", "latino", "malay", "mandopop", "metal", "metal-misc", "metalcore", "minimal-techno", "movies", "mpb", "new-age", "new-release", "opera", "pagode", "party", "philippines-opm", "piano", "pop", "pop-film", "post-dubstep", "power-pop", "progressive-house", "psych-rock", "punk", "punk-rock", "r-n-b", "rainy-day", "reggae", "reggaeton", "road-trip", "rock", "rock-n-roll", "rockabilly", "romance", "sad", "salsa", "samba", "sertanejo", "show-tunes", "singer-songwriter", "ska", "sleep", "songwriter", "soul", "soundtracks", "spanish", "study", "summer", "swedish", "synth-pop", "tango", "techno", "trance", "trip-hop", "turkish", "work-out", "world-music"};
 
     MessageService messageService;
-    YoutubeService youtubeService;
     SpotifyService spotifyService;
     PlayerManagerService playerManagerService;
 
@@ -34,7 +30,7 @@ public class MixCommand implements ISlashCommand {
         int amount = amountOption != null ? amountOption.getAsInt() : 5;
         event.deferReply().queue();
 
-        List<MusicDto> recommendations = switch (command) {
+        List<TrackDto> recommendations = switch (command) {
             case "artists" -> getRecommendationsForArtists(event, amount);
             case "genres" -> getRecommendationsForGenres(event, amount);
             case "tracks" -> getRecommendationsForTracks(event, amount);
@@ -42,9 +38,7 @@ public class MixCommand implements ISlashCommand {
         };
         
         var songs = recommendations.stream()
-                                   .map(music -> music.getTitle())
-                                   .map(youtubeService::searchVideoUrl)
-                                   .filter(Objects::nonNull)
+                                   .map(track -> track.getExternalUrls().getSpotify())
                                    .toList();
         if (songs.isEmpty()) {
             event.getHook().sendMessageEmbeds(messageService.getEmbedError("bot.song.nomatches").build())
@@ -55,12 +49,12 @@ public class MixCommand implements ISlashCommand {
 
         if (playerManagerService.joinAudioChannel(event)) {
             for (String song : songs) {
-                playerManagerService.loadAndPlayMusic(event, new MusicDto(null, song));
+                playerManagerService.loadAndPlayMusic(event, song);
             }
         }
     }
 
-    private List<MusicDto> getRecommendationsForArtists(SlashCommandInteractionEvent event, int amount) {
+    private List<TrackDto> getRecommendationsForArtists(SlashCommandInteractionEvent event, int amount) {
         List<String> artists = new ArrayList<>();
         var artist1Option = event.getOption("artist1");
         var artist2Option = event.getOption("artist2");
@@ -83,7 +77,7 @@ public class MixCommand implements ISlashCommand {
         return spotifyService.getRecommendationsForArtists(artistIds, amount);
     }
 
-    private List<MusicDto> getRecommendationsForGenres(SlashCommandInteractionEvent event, int amount) {
+    private List<TrackDto> getRecommendationsForGenres(SlashCommandInteractionEvent event, int amount) {
         List<String> genres = new ArrayList<>();
         var genre1Option = event.getOption("genre1");
         var genre2Option = event.getOption("genre2");
@@ -99,7 +93,7 @@ public class MixCommand implements ISlashCommand {
         return spotifyService.getRecommendationsForGenres(genres, amount);
     }
 
-    private List<MusicDto> getRecommendationsForTracks(SlashCommandInteractionEvent event, int amount) {
+    private List<TrackDto> getRecommendationsForTracks(SlashCommandInteractionEvent event, int amount) {
         List<String> tracks = new ArrayList<>();
         var track1Option = event.getOption("track1");
         var track2Option = event.getOption("track2");

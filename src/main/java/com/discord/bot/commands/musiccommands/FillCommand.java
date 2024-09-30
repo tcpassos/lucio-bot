@@ -3,12 +3,9 @@ package com.discord.bot.commands.musiccommands;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import com.discord.bot.commands.ISlashCommand;
-import com.discord.bot.dto.MusicDto;
 import com.discord.bot.service.MessageService;
-import com.discord.bot.service.YoutubeService;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;
 
@@ -19,7 +16,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 public class FillCommand implements ISlashCommand {
 
     MessageService messageService;
-    YoutubeService youtubeService;
     SpotifyService spotifyService;
     PlayerManagerService playerManagerService;
 
@@ -42,9 +38,7 @@ public class FillCommand implements ISlashCommand {
         
         var recommendations = spotifyService.getRecommendationsForTrackNames(queries, amount);
         var songs = recommendations.stream()
-                                   .map(music -> music.getTitle())
-                                   .map(youtubeService::searchVideoUrl)
-                                   .filter(Objects::nonNull)
+                                   .map(track -> track.getExternalUrls().getSpotify())
                                    .toList();
 
         if (songs.isEmpty()) {
@@ -56,7 +50,7 @@ public class FillCommand implements ISlashCommand {
 
         if (playerManagerService.joinAudioChannel(event)) {
             for (String song : songs) {
-                playerManagerService.loadAndPlayMusic(event, new MusicDto(null, song));
+                playerManagerService.loadAndPlayMusic(event, song);
             }
         }
     }

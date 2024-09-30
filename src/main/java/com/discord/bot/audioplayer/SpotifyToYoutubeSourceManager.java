@@ -84,7 +84,7 @@ public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
     private AudioItem loadSpotifyTrack(String url) {
         int idIndex = url.indexOf("track/") + 6;
         String trackId = url.substring(idIndex, idIndex + 22);
-        var trackData = spotifyService.getSpotifyTrackData(trackId);
+        var trackData = spotifyService.getTrackById(trackId);
 
         AudioTrackInfo spotifyTrackInfo = new AudioTrackInfo(
             trackData.getSongName(),
@@ -100,7 +100,7 @@ public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
     private AudioItem loadSpotifyPlaylist(String url) {
         int idIndex = url.indexOf("playlist/") + 9;
         String playlistId = url.substring(idIndex, idIndex + 22);
-        var playlistData = spotifyService.getSpotifyPlaylistData(playlistId);
+        var playlistData = spotifyService.getPlaylistById(playlistId);
         String playlistName = "[%s](%s)".formatted(playlistData.getName(), playlistData.getExternalUrls().getSpotify());
         var playlistItems = playlistData.getTracks().getItems();
         List<AudioTrack> tracks = new ArrayList<>();

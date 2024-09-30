@@ -19,7 +19,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.discord.bot.dto.MusicDto;
 import com.discord.bot.dto.response.spotify.ArtistDto;
 import com.discord.bot.dto.response.spotify.SpotifyPlaylistResponse;
 import com.discord.bot.dto.response.spotify.SpotifySearchResponse;
@@ -29,6 +28,7 @@ import com.discord.bot.dto.response.spotify.TrackDto;
 
 @Service
 public class SpotifyService {
+    private static final int MAX_SEEDS = 5;
     public static String spotifyToken;
 
     private final RestTemplate restTemplate;
@@ -37,11 +37,17 @@ public class SpotifyService {
         this.restTemplate = new RestTemplateBuilder().build();
     }
 
-    public List<MusicDto> getTopTracksFromArtist(String artist, int amount) {
-        List<MusicDto> musicDtos = new ArrayList<>();
+    /**
+     * Get top tracks from an artist
+     *
+     * @param artist the artist name
+     * @param amount the number of tracks to get
+     * @return list of {@link TrackDto} top tracks
+     */
+    public List<TrackDto> getTopTracksFromArtist(String artist, int amount) {
         Optional<ArtistDto> artistDto = searchArtist(artist);
         if (artistDto.isEmpty()) {
-            return musicDtos;
+            return new ArrayList<>();
         }
 
         String artistId = artistDto.get().getId();
@@ -49,64 +55,92 @@ public class SpotifyService {
         SpotifyTracksResponse spotifyTracksResponse = getSpotifyData(url, SpotifyTracksResponse.class);
 
         amount = Math.min(amount, spotifyTracksResponse.getTracks().size());
-    
-        for (int i = 0; i < amount; i++) {
-            TrackDto trackDto = spotifyTracksResponse.getTracks().get(i);
-            String musicName = artist + " - " + trackDto.getName();
-            musicDtos.add(new MusicDto(musicName, null));
-        }
-
-        return musicDtos;
+        return spotifyTracksResponse.getTracks().subList(0, amount);
     }
 
-    public List<MusicDto> getRecommendationsForArtists(List<String> artistIds, int amount) {
+    /**
+     * Get recommendations based on artists
+     *
+     * @param artistIds list of artist IDs
+     * @param amount the number of recommendations to get
+     * @return list of {@link TrackDto} recommendations
+     */
+    public List<TrackDto> getRecommendationsForArtists(List<String> artistIds, int amount) {
         Set<String> artistSet = new HashSet<>(artistIds);
         return getRecommendations(new ArrayList<>(artistSet), SeedType.ARTIST, amount);
     }
 
-    public List<MusicDto> getRecommendationsForGenres(List<String> genres, int amount) {
+    /**
+     * Get recommendations based on genres
+     *
+     * @param genres list of genres
+     * @param amount the number of recommendations to get
+     * @return list of {@link TrackDto} recommendations
+     */
+    public List<TrackDto> getRecommendationsForGenres(List<String> genres, int amount) {
         Set<String> genreSet = new HashSet<>(genres);
         return getRecommendations(new ArrayList<>(genreSet), SeedType.GENRE, amount);
     }
 
-    public List<MusicDto> getRecommendationsForTracks(List<String> trackIds, int amount) {
+    /**
+     * Get recommendations based on track IDs
+     *
+     * @param trackIds list of track IDs
+     * @param amount the number of recommendations to get
+     * @return list of {@link TrackDto} recommendations
+     */
+    public List<TrackDto> getRecommendationsForTracks(List<String> trackIds, int amount) {
         Set<String> trackSet = new HashSet<>(trackIds);
         return getRecommendations(new ArrayList<>(trackSet), SeedType.TRACK, amount);
     }
 
-    public List<MusicDto> getRecommendationsForTrackNames(List<String> trackNames, int amount) {
+    /**
+     * Get recommendations based on track names
+     *
+     * @param trackNames list of track names
+     * @param amount the number of recommendations to get
+     * @return list of {@link TrackDto} recommendations
+     */
+    public List<TrackDto> getRecommendationsForTrackNames(List<String> trackNames, int amount) {
         Set<String> trackIds = trackNames.stream()
             .map(this::searchTrack)
             .flatMap(Optional::stream)
             .map(TrackDto::getId)
-            .limit(5 /* Max seeds */)
+            .limit(MAX_SEEDS)
             .collect(Collectors.toSet());
     
         return getRecommendations(new ArrayList<>(trackIds), SeedType.TRACK, amount);
     }
-
-    private List<MusicDto> getRecommendations(Collection<String> seeds, SeedType type, int amount) {
-        List<MusicDto> recommendations = new ArrayList<>();
-        final int MAX_SEEDS = 5;
+    
+    /**
+     * Get recommendations based on seeds
+     *
+     * @param seeds list of seeds (artist, genre, or track)
+     * @param type the type of seed
+     * @param amount the number of recommendations to get
+     * @return list of {@link TrackDto} recommendations
+     */
+    private List<TrackDto> getRecommendations(Collection<String> seeds, SeedType type, int amount) {
         String seedsStr = seeds.stream()
                                .limit(MAX_SEEDS)
-                               .collect(StringBuilder::new, (sb, s) -> sb.append(s).append(","), StringBuilder::append)
-                               .toString();
-
+                               .collect(Collectors.joining(","));
+    
         String url = "https://api.spotify.com/v1/recommendations?limit=" + amount + "&" + type.getSeedParam() + "=" + seedsStr;
         SpotifyTracksResponse spotifyTracksResponse = getSpotifyData(url, SpotifyTracksResponse.class);
-        if (spotifyTracksResponse.getTracks() == null) {
-            return recommendations;
+    
+        if (spotifyTracksResponse.getTracks() != null) {
+            return spotifyTracksResponse.getTracks();
+        } else {
+            return new ArrayList<>();
         }
-
-        // Add recommendations to the list
-        spotifyTracksResponse.getTracks().forEach(trackDto -> {
-            String musicName = trackDto.getArtistDtoList().get(0).getName() + " - " + trackDto.getName();
-            recommendations.add(new MusicDto(musicName, null));
-        });
-        return recommendations;
     }
 
+    /**
+     * Search for an artist by name
+     *
+     * @param query the artist name
+     * @return {@link ArtistDto} if found, empty otherwise
+     */
     public Optional<ArtistDto> searchArtist(String query) {
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
         String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=artist&limit=1";
@@ -121,6 +155,12 @@ public class SpotifyService {
         return Optional.of(artists.get(0));
     }
 
+    /**
+     * Search for a track by name
+     *
+     * @param query the track name
+     * @return {@link TrackDto} if found, empty otherwise
+     */
     public Optional<TrackDto> searchTrack(String query) {
         String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
         String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=track&limit=1";
@@ -135,12 +175,12 @@ public class SpotifyService {
         return Optional.of(tracks.get(0));
     }
 
-    public SpotifyTrackResponse getSpotifyTrackData(String trackId) {
+    public SpotifyTrackResponse getTrackById(String trackId) {
         String url = "https://api.spotify.com/v1/tracks/" + trackId;
         return getSpotifyData(url, SpotifyTrackResponse.class);
     }
 
-    public SpotifyPlaylistResponse getSpotifyPlaylistData(String playlistId) {
+    public SpotifyPlaylistResponse getPlaylistById(String playlistId) {
         String url = "https://api.spotify.com/v1/playlists/" + playlistId + "?fields=name,external_urls,tracks.items";
         return getSpotifyData(url, SpotifyPlaylistResponse.class);
     }
