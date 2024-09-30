@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.discord.bot.audioplayer.GuildPlaybackManager;
 import com.discord.bot.audioplayer.SpotifyToYoutubeSourceManager;
 import com.discord.bot.audioplayer.TrackScheduler;
-import com.discord.bot.entity.Music;
 import com.discord.bot.repository.MusicRepository;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.MusicCommandUtils;
@@ -69,8 +68,8 @@ public class PlayerManagerService {
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager youtubeSourceManager = new YoutubeAudioSourceManager(true);
         // youtubeSourceManager.useOauth2(refreshToken, true);
-        youtubeSourceManager.useOauth2(null, false);
-        SpotifyToYoutubeSourceManager spotifyToYoutubeSourceManager = new SpotifyToYoutubeSourceManager(youtubeSourceManager, this.spotifyService, this.youtubeService);
+        // youtubeSourceManager.useOauth2(null, false);
+        SpotifyToYoutubeSourceManager spotifyToYoutubeSourceManager = new SpotifyToYoutubeSourceManager(youtubeSourceManager, this.spotifyService, this.youtubeService, this.musicRepository);
         
         this.audioPlayerManager.registerSourceManager(youtubeSourceManager);
         this.audioPlayerManager.registerSourceManager(spotifyToYoutubeSourceManager);
@@ -117,8 +116,6 @@ public class PlayerManagerService {
                     var channel = event.getMember().getVoiceState().getChannel();
                     loadAndPlaySfx(channel, sfxService.getSound(SfxType.MUSIC_START));
                 }
-
-                saveTrack(track);
             }
 
             @Override
@@ -243,13 +240,6 @@ public class PlayerManagerService {
         }
 
         return audioChannel;
-    }
-
-    private void saveTrack(AudioTrack track) {
-        String title = track.getInfo().author + " - " + track.getInfo().title;
-        Music music = new Music(0, title, track.getInfo().uri);
-        Music dbMusic = musicRepository.findFirstByTitle(music.getTitle());
-        if (dbMusic == null) musicRepository.save(music);
     }
 
     private String getMusicUrl(String query) {

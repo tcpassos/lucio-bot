@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.discord.bot.dto.spotify.TrackDto;
+import com.discord.bot.repository.MusicRepository;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.YoutubeService;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -18,18 +19,15 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
 
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor
 public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
 
     private final YoutubeAudioSourceManager youtubeSourceManager;
     private final SpotifyService spotifyService;
     private final YoutubeService youtubeService;
-
-    public SpotifyToYoutubeSourceManager(YoutubeAudioSourceManager youtubeSourceManager, SpotifyService spotifyService, YoutubeService youtubeService) {
-        this.youtubeSourceManager = youtubeSourceManager;
-        this.spotifyService = spotifyService;
-        this.youtubeService = youtubeService;
-    }
+    private final MusicRepository musicRepository;
 
     @Override
     public String getSourceName() {
@@ -63,7 +61,7 @@ public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
 
     @Override
     public AudioTrack decodeTrack(AudioTrackInfo trackInfo, DataInput input) throws IOException {
-        return new SpotifyAudioTrack(trackInfo, youtubeSourceManager, youtubeService);
+        return new SpotifyAudioTrack(trackInfo, youtubeSourceManager, youtubeService, musicRepository);
     }
 
     @Override
@@ -94,7 +92,7 @@ public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
             false,
             url
         );
-        return new SpotifyAudioTrack(spotifyTrackInfo, youtubeSourceManager, youtubeService);
+        return new SpotifyAudioTrack(spotifyTrackInfo, youtubeSourceManager, youtubeService, musicRepository);
     }
 
     private AudioItem loadSpotifyPlaylist(String url) {
@@ -115,7 +113,7 @@ public class SpotifyToYoutubeSourceManager implements AudioSourceManager {
                 false,
                 "https://open.spotify.com/track/" + track.getId()
             );
-            tracks.add(new SpotifyAudioTrack(spotifyTrackInfo, youtubeSourceManager, youtubeService));
+            tracks.add(new SpotifyAudioTrack(spotifyTrackInfo, youtubeSourceManager, youtubeService, musicRepository));
         }
 
         return new BasicAudioPlaylist(playlistName, tracks, null, false);

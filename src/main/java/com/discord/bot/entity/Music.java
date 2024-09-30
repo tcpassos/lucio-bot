@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
-@Table(name = "musics")
+@Table(name = "music")
 @Entity
 @AllArgsConstructor
 @Getter
@@ -13,8 +13,23 @@ import lombok.*;
 public class Music {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
+
+    @Column(name="spotify_id", unique=true)
+    private String spotifyId;
+
+    @Column(name="youtube_id")
+    private String youtubeId;
+
     private String title;
-    @Column(name = "youtube_uri")
-    private String reference;
+    private String artist;
+    private long durationMs;
+
+    public Music(String spotifyId, String youtubeId, String title, String artist, long durationMs) {
+        this.spotifyId = spotifyId;
+        this.youtubeId = youtubeId;
+        this.title = title;
+        this.artist = artist;
+        this.durationMs = durationMs;
+    }
 }
