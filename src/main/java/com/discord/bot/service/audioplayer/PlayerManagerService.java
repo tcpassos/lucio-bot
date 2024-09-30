@@ -1,6 +1,10 @@
 package com.discord.bot.service.audioplayer;
 
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -68,7 +72,7 @@ public class PlayerManagerService {
         // The default implementation of YoutubeAudioSourceManager is no longer supported, I'm using the LavaLink implementation
         YoutubeAudioSourceManager youtubeSourceManager = new YoutubeAudioSourceManager(true);
         // youtubeSourceManager.useOauth2(refreshToken, true);
-        // youtubeSourceManager.useOauth2(null, false);
+        youtubeSourceManager.useOauth2(null, false);
         SpotifyToYoutubeSourceManager spotifyToYoutubeSourceManager = new SpotifyToYoutubeSourceManager(youtubeSourceManager, this.spotifyService, this.youtubeService, this.musicRepository);
         
         this.audioPlayerManager.registerSourceManager(youtubeSourceManager);
@@ -92,6 +96,10 @@ public class PlayerManagerService {
     }
 
     public void loadAndPlayMusic(SlashCommandInteractionEvent event, String query) {
+        if (!joinAudioChannel(event)) {
+            return;
+        }
+
         String url = getMusicUrl(query);
         if (url == null) {
             url = youtubeService.searchVideoUrl(query);
@@ -148,6 +156,92 @@ public class PlayerManagerService {
                      .queue();
             }
         });
+    }
+
+    public void loadAndPlayMusic(SlashCommandInteractionEvent event, List<String> songs) {
+        if (!joinAudioChannel(event)) {
+            return;
+        }
+
+        final GuildPlaybackManager musicManager = this.getPlaybackManager(event.getGuild());
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        List<String> addedSongs = Collections.synchronizedList(new ArrayList<>());
+        List<String> failedSongs = Collections.synchronizedList(new ArrayList<>());
+
+        for (String query : songs) {
+            CompletableFuture<Void> future = new CompletableFuture<>();
+            futures.add(future);
+
+            String url = getMusicUrl(query);
+            if (url == null) {
+                url = youtubeService.searchVideoUrl(query);
+            }
+            if (url == null) {
+                failedSongs.add(query);
+                future.complete(null);
+                continue;
+            }
+
+            this.audioPlayerManager.loadItemOrdered(musicManager, url, new AudioLoadResultHandler() {
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    musicManager.musicScheduler.queue(track);
+                    addedSongs.add("[%s](%s)".formatted(track.getInfo().title, track.getInfo().uri));
+                    future.complete(null);
+                }
+
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    for (AudioTrack track : playlist.getTracks()) {
+                        musicManager.musicScheduler.queue(track);
+                        addedSongs.add("[%s](%s)".formatted(track.getInfo().title, track.getInfo().uri));
+                    }
+                    future.complete(null);
+                }
+
+                @Override
+                public void noMatches() {
+                    failedSongs.add(query);
+                    future.complete(null);
+                }
+
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    failedSongs.add(query);
+                    future.complete(null);
+                }
+            });
+        }
+
+        // After all futures are completed
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenRun(() -> {
+                StringBuilder messageBuilder = new StringBuilder();
+
+                if (!addedSongs.isEmpty()) {
+                    messageBuilder.append(messageService.getMessage("bot.queue.added.song.list"));
+                    for (String songTitle : addedSongs) {
+                        messageBuilder.append("• ").append(songTitle).append("\n");
+                    }
+                }
+
+                if (!failedSongs.isEmpty()) {
+                    messageBuilder.append(messageService.getMessage("bot.queue.failed.song.list"));
+                    for (String failedQuery : failedSongs) {
+                        messageBuilder.append("• ").append(failedQuery).append("\n");
+                    }
+                }
+                // If at least one song was added
+                if (messageBuilder.length() > 0) {
+                    event.getHook().sendMessageEmbeds(new EmbedBuilder().setDescription(messageBuilder.toString()).setColor(failedSongs.isEmpty() ? Color.GREEN : Color.RED).build())
+                        .setEphemeral(false)
+                        .queue();
+                } else {
+                    event.getHook().sendMessageEmbeds(messageService.getEmbedError("bot.queue.none.added").build())
+                        .setEphemeral(true)
+                        .queue();
+                }
+            });
     }
 
     public void loadAndPlaySfx(@NonNull AudioChannel channel, @NonNull String reference) {

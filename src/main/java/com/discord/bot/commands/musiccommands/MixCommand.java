@@ -47,11 +47,7 @@ public class MixCommand implements ISlashCommand {
             return;
         }
 
-        if (playerManagerService.joinAudioChannel(event)) {
-            for (String song : songs) {
-                playerManagerService.loadAndPlayMusic(event, song);
-            }
-        }
+        playerManagerService.loadAndPlayMusic(event, songs);
     }
 
     private List<TrackDto> getRecommendationsForArtists(SlashCommandInteractionEvent event, int amount) {

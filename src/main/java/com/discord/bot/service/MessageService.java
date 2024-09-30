@@ -38,6 +38,10 @@ public class MessageService {
         return new EmbedBuilder().setDescription(getMessage(key, params)).setColor(Color.GREEN);
     }
 
+    public EmbedBuilder getEmbedWarning(String key, Object... params) {
+        return new EmbedBuilder().setDescription(getMessage(key, params)).setColor(Color.YELLOW);
+    }
+
     public EmbedBuilder getEmbedError(String key, Object... params) {
         return new EmbedBuilder().setDescription(getMessage(key, params)).setColor(Color.RED);
     }

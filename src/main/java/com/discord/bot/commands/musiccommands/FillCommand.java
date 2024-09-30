@@ -48,10 +48,6 @@ public class FillCommand implements ISlashCommand {
             return;
         }
 
-        if (playerManagerService.joinAudioChannel(event)) {
-            for (String song : songs) {
-                playerManagerService.loadAndPlayMusic(event, song);
-            }
-        }
+        playerManagerService.loadAndPlayMusic(event, songs);
     }
 }

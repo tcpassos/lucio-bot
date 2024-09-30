@@ -13,9 +13,6 @@ public class PlayCommand implements ISlashCommand {
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
-    
-        if (playerManagerService.joinAudioChannel(event)) {
-            playerManagerService.loadAndPlayMusic(event, event.getOption("query").getAsString());
-        }
+        playerManagerService.loadAndPlayMusic(event, event.getOption("query").getAsString());
     }
 }
