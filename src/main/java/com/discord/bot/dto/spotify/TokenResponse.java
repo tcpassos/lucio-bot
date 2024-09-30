@@ -1,4 +1,4 @@
-package com.discord.bot.dto.response.spotify;
+package com.discord.bot.dto.spotify;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

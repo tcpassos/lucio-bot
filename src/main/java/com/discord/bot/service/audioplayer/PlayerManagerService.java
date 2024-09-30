@@ -118,7 +118,7 @@ public class PlayerManagerService {
                     loadAndPlaySfx(channel, sfxService.getSound(SfxType.MUSIC_START));
                 }
 
-                saveTrack(track, track.getInfo().author + " - " + track.getInfo().title);
+                saveTrack(track);
             }
 
             @Override
@@ -245,12 +245,11 @@ public class PlayerManagerService {
         return audioChannel;
     }
 
-    private void saveTrack(AudioTrack track, String title) {
-        if (title != null) {
-            Music music = new Music(0, title, track.getInfo().uri);
-            Music dbMusic = musicRepository.findFirstByTitle(music.getTitle());
-            if (dbMusic == null) musicRepository.save(music);
-        }
+    private void saveTrack(AudioTrack track) {
+        String title = track.getInfo().author + " - " + track.getInfo().title;
+        Music music = new Music(0, title, track.getInfo().uri);
+        Music dbMusic = musicRepository.findFirstByTitle(music.getTitle());
+        if (dbMusic == null) musicRepository.save(music);
     }
 
     private String getMusicUrl(String query) {

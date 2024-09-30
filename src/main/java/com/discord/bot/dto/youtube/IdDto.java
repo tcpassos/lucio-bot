@@ -1,4 +1,4 @@
-package com.discord.bot.dto;
+package com.discord.bot.dto.youtube;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class MusicDto {
-    private String title;
-    private String reference;
+public class IdDto {
+    private String videoId;
 }

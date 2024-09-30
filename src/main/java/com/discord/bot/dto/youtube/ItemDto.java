@@ -1,6 +1,6 @@
-package com.discord.bot.dto.response.youtube;
+package com.discord.bot.dto.youtube;
 
-import com.discord.bot.dto.response.youtube.IdDto;
+import com.discord.bot.dto.youtube.IdDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

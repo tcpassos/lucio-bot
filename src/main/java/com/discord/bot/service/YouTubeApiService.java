@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.discord.bot.context.GuildContextHolder;
-import com.discord.bot.dto.response.youtube.YoutubeResponse;
+import com.discord.bot.dto.youtube.YoutubeResponse;
 import com.discord.bot.entity.GuildConfig;
 
 @Service

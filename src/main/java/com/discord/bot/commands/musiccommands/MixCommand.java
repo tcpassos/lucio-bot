@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.discord.bot.commands.ISlashCommand;
-import com.discord.bot.dto.response.spotify.ArtistDto;
-import com.discord.bot.dto.response.spotify.TrackDto;
+import com.discord.bot.dto.spotify.ArtistDto;
+import com.discord.bot.dto.spotify.TrackDto;
 import com.discord.bot.service.MessageService;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.audioplayer.PlayerManagerService;

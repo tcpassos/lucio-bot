@@ -1,18 +1,19 @@
-package com.discord.bot.dto.response.spotify;
+package com.discord.bot.dto.spotify;
+
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
-public class ArtistSearchDto {
+public class PlaylistTracksDto {
     @JsonProperty("items")
-    private List<ArtistDto> items;
+    private List<PlaylistTrackDto> items;
 }

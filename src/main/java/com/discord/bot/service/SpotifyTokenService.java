@@ -1,6 +1,5 @@
 package com.discord.bot.service;
 
-import com.discord.bot.dto.response.spotify.TokenResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -8,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import com.discord.bot.dto.spotify.TokenResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;

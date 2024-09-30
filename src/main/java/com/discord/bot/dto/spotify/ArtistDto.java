@@ -1,4 +1,4 @@
-package com.discord.bot.dto.response.spotify;
+package com.discord.bot.dto.spotify;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

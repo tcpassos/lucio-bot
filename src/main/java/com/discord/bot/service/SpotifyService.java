@@ -19,12 +19,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.discord.bot.dto.response.spotify.ArtistDto;
-import com.discord.bot.dto.response.spotify.SpotifyPlaylistResponse;
-import com.discord.bot.dto.response.spotify.SpotifySearchResponse;
-import com.discord.bot.dto.response.spotify.SpotifyTrackResponse;
-import com.discord.bot.dto.response.spotify.SpotifyTracksResponse;
-import com.discord.bot.dto.response.spotify.TrackDto;
+import com.discord.bot.dto.spotify.ArtistDto;
+import com.discord.bot.dto.spotify.SpotifyPlaylistResponse;
+import com.discord.bot.dto.spotify.SpotifySearchResponse;
+import com.discord.bot.dto.spotify.SpotifyTrackResponse;
+import com.discord.bot.dto.spotify.SpotifyTracksResponse;
+import com.discord.bot.dto.spotify.TrackDto;
 
 @Service
 public class SpotifyService {

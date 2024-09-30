@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.discord.bot.dto.response.spotify.TrackDto;
+import com.discord.bot.dto.spotify.TrackDto;
 import com.discord.bot.service.SpotifyService;
 import com.discord.bot.service.YoutubeService;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
